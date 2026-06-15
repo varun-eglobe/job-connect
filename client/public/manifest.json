@@ -1,0 +1,16 @@
+{
+  "short_name": "TJC",
+  "name": "TJC - Job Connect",
+  "icons": [
+    {
+      "src": "/logos/app_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff"
+}

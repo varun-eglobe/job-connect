@@ -1,0 +1,1132 @@
+xpiry date cannot be in the past.`}
+);
+return}
+try{
+f?(await X.put(`/api/jobs/${
+f}
+`,
+{
+...m,
+employer_id:b}
+),
+_({
+type:`success`,
+text:`Job updated successfully!`}
+)):(await X.post(`/api/jobs`,
+{
+...m,
+employer_id:b}
+),
+_({
+type:`success`,
+text:`Job posted successfully!`}
+)),
+d(!1),
+p(null),
+h({
+title:``,
+description:``,
+location:`Pattom`,
+job_type:`Full-time`,
+vacancies_count:1,
+expiry_date:``,
+contact_person:``,
+contact_phone:``,
+status:`active`,
+is_urgent:!1,
+salary_range:``}
+),
+S((await X.get(`/api/jobs?employer_id=${
+b}
+`)).data.jobs)}
+catch(e){
+_({
+type:`error`,
+text:e.response?.data?.error||`Operation failed.`}
+)}
+}
+,
+N=e=>{
+let t=e.expiry_date?new Date(e.expiry_date).toISOString().split(`T`)[0]:``;
+h({
+title:e.title,
+description:e.description,
+location:e.location,
+job_type:e.job_type,
+vacancies_count:e.vacancies_count,
+expiry_date:t,
+contact_person:e.contact_person,
+contact_phone:e.contact_phone,
+status:e.status,
+is_urgent:!!e.is_urgent,
+salary_range:e.salary_range||``}
+),
+p(e.id),
+d(!0)}
+;
+return(0,
+Z.jsxs)(`div`,
+{
+className:`max-w-5xl mx-auto px-4 py-8 space-y-8`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`relative bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm overflow-hidden`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`absolute top-0 right-0 w-64 h-64 bg-blue-50/50 blur-[100px] -mr-32 -mt-32`}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`absolute bottom-0 left-0 w-64 h-64 bg-indigo-50/50 blur-[100px] -ml-32 -mb-32`}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-6`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-500/20`,
+children:o?.company_name?.[0]||`E`}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-3 mb-1`,
+children:[(0,
+Z.jsx)(`h1`,
+{
+className:`text-3xl font-black text-slate-900`,
+children:o?.company_name||`Your Business`}
+),
+e&&(0,
+Z.jsx)(rr,
+{
+className:`text-blue-500`,
+size:24}
+)]}
+),
+(0,
+Z.jsxs)(`p`,
+{
+className:`text-slate-500 flex items-center gap-2 text-sm font-medium`,
+children:[(0,
+Z.jsx)(Gr,
+{
+size:14,
+className:`text-blue-400`}
+),
+o?.name||`Contact Person`,
+` • Employer Account`]}
+)]}
+)]}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`flex flex-wrap gap-3`}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`relative mt-8 pt-8 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-4 text-slate-600`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100`,
+children:(0,
+Z.jsx)(Ar,
+{
+size:18,
+className:`text-blue-500`}
+)}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-bold`,
+children:`Contact Phone`}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-sm font-semibold text-slate-700`,
+children:o?.phone||`---`}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-4 text-slate-600`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100`,
+children:(0,
+Z.jsx)(Cr,
+{
+size:18,
+className:`text-blue-500`}
+)}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex-1 min-w-0`,
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-bold`,
+children:`Base Location`}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center justify-between gap-2`,
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-sm font-semibold truncate text-slate-700`,
+children:o?.address||`---`}
+),
+o?.google_map_link&&(0,
+Z.jsx)(`a`,
+{
+href:o.google_map_link,
+target:`_blank`,
+rel:`noreferrer`,
+className:`text-blue-500 hover:text-blue-700`,
+children:(0,
+Z.jsx)(mr,
+{
+size:14}
+)}
+)]}
+)]}
+)]}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`grid grid-cols-1 md:grid-cols-3 gap-6`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-4`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`flex items-center justify-between`,
+children:(0,
+Z.jsxs)(`h3`,
+{
+className:`font-bold text-slate-800 flex items-center gap-2`,
+children:[(0,
+Z.jsx)(Br,
+{
+size:18,
+className:`text-blue-600`}
+),
+`Account Status`]}
+)}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`space-y-3`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center justify-between p-3 rounded-2xl ${
+i?`bg-green-50 border border-green-100`:`bg-orange-50 border border-orange-100`}
+`,
+children:[(0,
+Z.jsx)(`span`,
+{
+className:`text-[11px] uppercase tracking-wider ${
+i?`text-green-700`:`text-orange-700`}
+ font-bold`,
+children:`Listing Approval`}
+),
+(0,
+Z.jsxs)(`span`,
+{
+className:`flex items-center gap-1 ${
+i?`text-green-600`:`text-orange-600`}
+ text-xs font-black`,
+children:[i?(0,
+Z.jsx)(rr,
+{
+size:14}
+):(0,
+Z.jsx)(ar,
+{
+size:14}
+),
+i?`APPROVED`:`PENDING`]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center justify-between p-3 rounded-2xl ${
+n?`bg-blue-50 border border-blue-100`:e?`bg-green-50 border border-green-100`:`bg-slate-50 border border-slate-100`}
+`,
+children:[(0,
+Z.jsx)(`span`,
+{
+className:`text-[11px] uppercase tracking-wider ${
+n?`text-blue-700`:e?`text-green-700`:`text-slate-700`}
+ font-bold`,
+children:`Verified Badge`}
+),
+(0,
+Z.jsxs)(`span`,
+{
+className:`flex items-center gap-1 ${
+n?`text-blue-600`:e?`text-green-600`:`text-slate-500`}
+ text-xs font-black`,
+children:[e?(0,
+Z.jsx)(rr,
+{
+size:14}
+):(0,
+Z.jsx)(ar,
+{
+size:14}
+),
+n?`GST VERIFIED`:e?`VERIFIED BY ADMIN`:`NOT VERIFIED`]}
+)]}
+)]}
+),
+!i&&(0,
+Z.jsxs)(`div`,
+{
+className:`p-4 rounded-2xl bg-orange-50/50 text-[11px] text-orange-800 leading-relaxed flex gap-3`,
+children:[(0,
+Z.jsx)(tr,
+{
+size:16,
+className:`shrink-0 text-orange-500`}
+),
+(0,
+Z.jsx)(`p`,
+{
+children:`Your account is under review. Jobs will be visible once approved.`}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`md:col-span-2 bg-blue-50 text-slate-900 p-8 rounded-[2rem] border border-blue-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`absolute top-0 right-0 w-32 h-32 bg-blue-200/20 blur-3xl -mr-16 -mt-16`}
+),
+(0,
+Z.jsx)(qn,
+{
+className:`absolute -right-8 -bottom-8 text-blue-200/20 w-48 h-48 rotate-12`}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`relative flex-1`,
+children:[(0,
+Z.jsx)(`h3`,
+{
+className:`font-bold text-blue-600 uppercase tracking-[0.2em] text-[10px] mb-6`,
+children:`Active Vacancies`}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-baseline gap-4`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`text-7xl font-black tracking-tighter text-blue-600`,
+children:x.length}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`space-y-1`,
+children:[(0,
+Z.jsxs)(`p`,
+{
+className:`text-slate-600 text-sm font-medium`,
+children:[x.filter(e=>e.status===`active`).length,
+` currently live jobs`]}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`h-1.5 w-32 bg-blue-200 rounded-full overflow-hidden`,
+children:(0,
+Z.jsx)(`div`,
+{
+className:`h-full bg-blue-600 transition-all duration-1000`,
+style:{
+width:`${
+x.length>0?x.filter(e=>e.status===`active`).length/x.length*100:0}
+%`}
+}
+)}
+)]}
+)]}
+)]}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`relative`,
+children:!u&&(0,
+Z.jsxs)(`button`,
+{
+onClick:()=>d(!0),
+className:`group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 h-16 rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-95 overflow-hidden whitespace-nowrap`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700`}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center`,
+children:(0,
+Z.jsx)(jr,
+{
+size:20}
+)}
+),
+(0,
+Z.jsx)(`span`,
+{
+children:`Post New Job`}
+)]}
+)}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`p-8 border-b border-slate-50 flex items-center justify-between`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`h3`,
+{
+className:`text-2xl font-black text-slate-900 tracking-tight`,
+children:`Your Recent Listings`}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-slate-500 text-sm mt-1`,
+children:`Manage and monitor your active job vacancies`}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl text-[10px] uppercase tracking-widest text-slate-400 font-black`,
+children:[(0,
+Z.jsx)(ar,
+{
+size:14,
+className:`text-blue-400`}
+),
+` Last Sync: Just Now`]}
+)]}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`p-8`,
+children:T?(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center justify-center py-20 text-slate-400 gap-3`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin`}
+),
+(0,
+Z.jsx)(`span`,
+{
+className:`font-bold uppercase tracking-widest text-xs`,
+children:`Syncing jobs...`}
+)]}
+):x.length===0?(0,
+Z.jsxs)(`div`,
+{
+className:`bg-slate-50 p-20 rounded-[2rem] border border-dashed border-slate-200 text-center`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm`,
+children:(0,
+Z.jsx)(qn,
+{
+size:32,
+className:`text-slate-300`}
+)}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-slate-500 font-bold`,
+children:`You haven't posted any jobs yet.`}
+),
+(0,
+Z.jsx)(`button`,
+{
+onClick:()=>d(!0),
+className:`mt-4 text-blue-600 font-bold text-sm hover:underline`,
+children:`Create your first listing`}
+)]}
+):(0,
+Z.jsx)(`div`,
+{
+className:`grid grid-cols-1 gap-6`,
+children:x.map(e=>{
+let t=e.expiry_date&&new Date(e.expiry_date).toISOString().split(`T`)[0]<new Date().toISOString().split(`T`)[0];
+return(0,
+Z.jsxs)(`div`,
+{
+className:`group rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col ${
+t?`bg-red-50/50 border-red-100 shadow-sm`:`bg-white border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-500/5`}
+`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`absolute top-0 right-0`,
+children:(0,
+Z.jsx)(`div`,
+{
+className:`px-4 py-1.5 rounded-bl-xl text-[10px] font-black uppercase tracking-widest ${
+e.status===`active`?`bg-green-100 text-green-600`:`bg-slate-100 text-slate-500`}
+`,
+children:e.status}
+)}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`pt-8 px-6 pb-6 flex-1`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex justify-between items-start mb-4`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex-1 pr-12`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-3 mb-1 flex-wrap`,
+children:[(0,
+Z.jsx)(`h4`,
+{
+className:`text-lg font-black tracking-tight group-hover:text-blue-600 transition-colors line-clamp-1 ${
+t?`text-slate-700`:`text-slate-900`}
+`,
+children:e.title}
+),
+e.job_post_id&&(0,
+Z.jsxs)(`span`,
+{
+className:`px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-wider rounded-md border border-slate-200 shadow-sm whitespace-nowrap`,
+children:[`ID: `,
+e.job_post_id]}
+),
+!!e.is_urgent&&(0,
+Z.jsx)(`span`,
+{
+className:`px-2 py-0.5 bg-red-100 text-red-600 text-[9px] font-black uppercase tracking-wider rounded-md border border-red-200 animate-pulse`,
+children:`Urgent`}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-2 text-xs text-slate-400 font-bold mt-1`,
+children:[(0,
+Z.jsx)(Cr,
+{
+size:12,
+className:`text-blue-500`}
+),
+` `,
+e.location]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-2`,
+children:[(0,
+Z.jsx)(_n,
+{
+to:`/jobs/${
+e.id}
+`,
+target:`_blank`,
+className:`p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center`,
+title:`View Job Detail Page`,
+children:(0,
+Z.jsx)(dr,
+{
+size:16}
+)}
+),
+(0,
+Z.jsx)(`button`,
+{
+onClick:()=>N(e),
+className:`p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95`,
+title:`Edit Job`,
+children:(0,
+Z.jsx)(kr,
+{
+size:16}
+)}
+)]}
+)]}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`flex flex-wrap gap-2 mb-4`,
+children:e.job_type&&e.job_type.split(`,
+`).map((e,
+t)=>(0,
+Z.jsx)(`span`,
+{
+className:`px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-100`,
+children:e.trim()}
+,
+t))}
+),
+(0,
+Z.jsxs)(`p`,
+{
+className:`text-slate-500 text-sm line-clamp-2 italic mb-6`,
+children:[`"`,
+e.description,
+`"`]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`grid grid-cols-3 gap-3 pt-4 border-t border-slate-50`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1`,
+children:`Vacancy`}
+),
+(0,
+Z.jsxs)(`p`,
+{
+className:`text-sm font-bold text-slate-700`,
+children:[e.vacancies_count||1,
+` Nos`]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1`,
+children:`Salary`}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-sm font-bold text-slate-700 truncate`,
+title:e.salary_range||`Not Specified`,
+children:e.salary_range||`Not Specified`}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-[10px] uppercase tracking-widest font-black mb-1 ${
+t?`text-red-700`:`text-slate-400`}
+`,
+children:t?`Expired`:`Expires`}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-sm font-black ${
+t?`text-red-700`:`text-red-500`}
+`,
+children:e.expiry_date?new Date(e.expiry_date).toLocaleDateString(`en-GB`,
+{
+day:`2-digit`,
+month:`short`}
+):`N/A`}
+)]}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`px-6 py-4 bg-slate-50/50 flex items-center justify-between border-t border-slate-50`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`flex items-center gap-2`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-blue-500`,
+children:(0,
+Z.jsx)(Gr,
+{
+size:14}
+)}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`text-[10px]`,
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-slate-400 font-bold uppercase tracking-widest leading-none`,
+children:`Contact`}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-slate-700 font-black truncate max-w-[100px]`,
+children:e.contact_person||`HR Dept`}
+)]}
+)]}
+),
+e.contact_phone&&(0,
+Z.jsxs)(`div`,
+{
+className:`text-[10px] text-right`,
+children:[(0,
+Z.jsx)(`p`,
+{
+className:`text-slate-400 font-bold uppercase tracking-widest leading-none`,
+children:`Phone`}
+),
+(0,
+Z.jsx)(`p`,
+{
+className:`text-blue-600 font-black`,
+children:e.contact_phone}
+)]}
+)]}
+)]}
+,
+e.id)}
+)}
+)}
+)]}
+),
+u&&(0,
+Z.jsx)(`div`,
+{
+className:`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm`,
+children:(0,
+Z.jsxs)(`div`,
+{
+className:`bg-white w-full max-w-lg rounded-2xl sm:rounded-[2rem] shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden`,
+children:[(0,
+Z.jsx)(`div`,
+{
+className:`px-6 py-4 sm:px-8 sm:py-6 border-b border-slate-100 flex-shrink-0`,
+children:(0,
+Z.jsx)(`h2`,
+{
+className:`text-xl sm:text-2xl font-black text-slate-900`,
+children:f?`Update Job Listing`:`Post New Job`}
+)}
+),
+(0,
+Z.jsxs)(`form`,
+{
+onSubmit:M,
+className:`flex flex-col flex-1 overflow-hidden min-h-0`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+className:`p-6 sm:p-8 overflow-y-auto flex-1 space-y-6`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Job Title`}
+),
+(0,
+Z.jsx)(`input`,
+{
+type:`text`,
+required:!0,
+placeholder:`e.g. Delivery Executive`,
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.title,
+onChange:e=>h({
+...m,
+title:e.target.value}
+)}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Description`}
+),
+(0,
+Z.jsx)(`textarea`,
+{
+required:!0,
+rows:`3`,
+placeholder:`Job requirements,
+ timings,
+ etc...`,
+className:`w-full p-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.description,
+onChange:e=>h({
+...m,
+description:e.target.value}
+)}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`grid grid-cols-1 sm:grid-cols-2 gap-4`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Vacancies`}
+),
+(0,
+Z.jsx)(`input`,
+{
+type:`number`,
+min:`1`,
+required:!0,
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.vacancies_count,
+onChange:e=>h({
+...m,
+vacancies_count:parseInt(e.target.value)}
+)}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Expiry Date`}
+),
+(0,
+Z.jsx)(`input`,
+{
+type:`date`,
+required:!0,
+min:N_(),
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.expiry_date,
+onChange:e=>{
+let t=e.target.value;
+t&&t<N_()?(_({
+type:`error`,
+text:`Expiry date cannot be in the past.`}
+),
+h({
+...m,
+expiry_date:``}
+)):(_(``),
+h({
+...m,
+expiry_date:t}
+))}
+}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`grid grid-cols-1 sm:grid-cols-2 gap-4`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Contact Person`}
+),
+(0,
+Z.jsx)(`input`,
+{
+type:`text`,
+required:!0,
+placeholder:`Name`,
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.contact_person,
+onChange:e=>h({
+...m,
+contact_person:e.target.value}
+)}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Contact Phone`}
+),
+(0,
+Z.jsx)(`input`,
+{
+type:`text`,
+placeholder:`Optional`,
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.contact_phone,
+onChange:e=>h({
+...m,
+contact_phone:e.target.value}
+)}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+className:`grid grid-cols-1 sm:grid-cols-2 gap-4`,
+children:[(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Region / District`}
+),
+(0,
+Z.jsxs)(`select`,
+{
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:O,
+onChange:e=>{
+let t=e.target.value;
+h(e=>({
+...e,
+location:t}
+))}
+,
+children:[(0,
+Z.jsx)(`option`,
+{
+value:``,
+children:`Select Region / District`}
+),
+C.filter(e=>!e.parent_id).map(e=>(0,
+Z.jsx)(`option`,
+{
+value:e.name,
+children:e.name}
+,
+e.id))]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Area / Sub-place`}
+),
+(0,
+Z.jsxs)(`select`,
+{
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60 disabled:bg-slate-50/50 disabled:cursor-not-allowed`,
+value:k,
+disabled:!O,
+onChange:e=>{
+let t=e.target.value;
+h(e=>({
+...e,
+location:t||O}
+))}
+,
+children:[(0,
+Z.jsx)(`option`,
+{
+value:``,
+children:O?`Select Area / Sub-place`:`Select Region First`}
+),
+j.map(e=>(0,
+Z.jsx)(`option`,
+{
+value:e.name,
+children:e.name}
+,
+e.id))]}
+)]}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-1`,
+children:`Salary Range`}
+),
+(0,
+Z.jsx)(`input`,
+{
+type:`text`,
+placeholder:`e.g. ₹15,
+000 - ₹20,
+000`,
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,
+value:m.salary_range,
+onChange:e=>h({
+...m,
+salary_range:e.target.value}
+)}
+)]}
+),
+(0,
+Z.jsxs)(`div`,
+{
+children:[(0,
+Z.jsx)(`label`,
+{
+className:`block text-sm font-semibold text-slate-700 mb-2`,
+children:`Job Types (Select all that apply)`}
+),
+(0,
+Z.jsx)(`div`,
+{
+className:`flex flex-wrap gap-3`,
+children:[`Full-time`,
+`Part-time`,
+`Daily Wages`,
+`Contract`].map(e=>(0,
+Z.jsxs)(`label`,
+{
+className:`flex items-center gap-2 cursor-pointer p-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors`,
+children:[(0,
+Z.jsx)(`input`,
+{
+type:`checkbox`,
+checked:m.job_type&&m.job_type.split(`,
+`).map(e=>e.trim()).includes(e),
+onChange:()=>{
+let t=m.job_type?m.job_type.split(`,
+`).map(e=>e.trim()).filter(Boolean):[];
+t.includes(e)?t=t.filter(t=>t!==e):t.push(e),
+h({
+...m,
+job_type:t.join(`,
+ `)}
+)}
+,
+className:`w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500`}
+),
+(0,
+Z.jsx)(`span`,
+{
+className:`text-sm font-medium text-slate-700`,
+children:e}
+)]}
+,
+e))}
+)]}
+),
+(0,
+Z.jsx)(`div`,
+{
+children:(0,
+Z.jsxs)(`label`,
+{
+className:`flex items-center gap-3 p-4 rounded-xl border border-orange-100 bg-orange-50/30 cursor-pointer hover:bg-orange-50 transition-colors`,
+children:[(0,
+Z.jsx)(`input`,
+{
+type:`checkbox`,
+checked:m.is_urgent,
+onChange:e=>h({
+...m,
+is_urgent:e.target.checked}
+),
+className:`w-5 h-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500`}
+),
+(

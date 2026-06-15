@@ -1,0 +1,1184 @@
+EmployerDashboard.jsx:1: import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import { Plus, Briefcase, Clock, CheckCircle2, AlertCircle, Pencil, MapPin, Mail, Phone, User, Globe, ShieldCheck, Eye } from 'lucide-react';
+
+const EmployerDashboard = () => {
+  const [isVerified, setIsVerified] = useState(false);
+  const [isGstVerified, setIsGstVerified] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState('pending');
+  const [showPostingForm, setShowPostingForm] = useState(false);
+  const [editingJobId, setEditingJobId] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    location: 'Pattom',
+    job_type: 'Full-time',
+    vacancies_count: 1,
+    expiry_date: '',
+    contact_person: '',
+    contact_phone: '',
+    status: 'active',
+    is_urgent: false,
+    salary_range: ''
+  });
+
+  const [message, setMessage] = useState('');
+  const navigate = useNavigate();
+  
+  const employerId = localStorage.getItem('user_id');
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if (role !== 'employer' && role !== 'admin') {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const [jobs, setJobs] = useState([]);
+  const [locations, setLocations
+<truncated 34458 bytes>
+label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="status" 
+                      value="inactive"
+                      checked={formData.status === 'inactive'}
+                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-sm">Inactive</span>
+                  </label>
+                </div>
+              </div>
+
+              {message && (
+                <div className={`p-4 rounded-xl text-sm ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
+                  {message.text}
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-6">
+                <button 
+                  type="button"
+                  onClick={() => { setShowPostingForm(false); setEditingJobId(null); setMessage(''); }}
+                  className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 h-12 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                >
+                  {editingJobId ? 'Update Listing' : 'Post Job'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EmployerDashboard;\nJobDetail.jsx:5: Apply here:`;
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: `${text} ${url}`
+      }).catch((err) => console.log('Error sharing:', err));
+    } else {
+      setShareData({ title, text, url });
+      setShowShareModal(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-slate-400 font-bold flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          Loading Job Details...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center max-w-2xl mx-auto px-4 text-center">
+        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mb-8">
+          <Search size={48} />
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 mb-4">Job Not Found</h2>
+        <p className="text-slate-500 text-lg mb-10 leading-relaxed font-medium italic">
+          {error || "The job opportunity you are looking for might have been closed, filled, or removed by the employer."}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <Link to="/jobs" className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:-translate-y-1">
+            Browse All Jobs
+          </Link>
+          <Link to="/" className="px-8 py-4 bg-white text-slate-600 rounded-2xl font-black uppercase tracking-widest text-sm border border-slate-200 hover:bg-slate-50 transition-all hover:-translate-y-1">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 pt-6 md:pt-10 flex flex-col">
+      <div className="max-w-5xl mx-auto px-4 pb-20 flex-grow">
+        
+        {/* Top Actions */}
+        <div className="flex items-center justify-between mb-6">
+          <Link to="/jobs" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold text-sm transition-colors bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+            <ChevronLeft size={16} />
+            Back to Jobs
+          </Link>
+          <button 
+            onClick={handleShare}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm border ${
+              copied 
+                ? 'bg-green-50 text-green-600 border-green-200' 
+                : 'bg-white text-slate-600 border-slate-200 hover:text-blue-600 hover:border-blue-200'
+            }`}
+          >
+            {copied ? <Check size={16} /> : <Share2 size={16} />}
+            {copied ? 'Copied Link' : 'Share Job'}
+          </button>
+        </div>
+
+        {/* Hero Card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10 mb-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
+          
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                {job.job_post_id && (
+                  <span className="bg-slate-100 text-slate-700 px-3 py-1 text-xs font-black uppercase tracking-wider rounded-lg border border-slate-200 shadow-sm">
+                    ID: {job.job_post_id}
+                  </span>
+                )}
+                {!!job.is_urgent && (
+                  <span className="bg-red-100 text-red-600 px-3 py-1 text-xs font-black uppercase tracking-wider rounded-lg">
+                    Urgent Hiring
+                  </span>
+                )}
+                {isLoggedIn && (
+                  job.is_gst_verified === 1 ? (
+                    <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">
+                      <ShieldCheck size={14} /> GST Verified
+                    </span>
+                  ) : job.is_verified === 1 ? (
+                    <span className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border border-emerald-100">
+                      <ShieldCheck size={14} /> Verified by Admin
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider border border-amber-100">
+                      <AlertCircle size={14} /> Not Verified
+                    </span>
+                  )
+                )}
+              </div>
+              
+              <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-4 leading-tight">
+                {job.title}
+              </h1>
+              
+              <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600">
+                {isLoggedIn ? (
+                  <Link to={`/jobs?company=${encodeURIComponent(job.company_name)}`} className="flex items-center gap-2 text-slate-800 hover:text-blue-600 transition-colors">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
+                      <Building2 size={16} />
+                    </div>
+                    {job.company_name}
+                  </Link>
+                ) : (
+                  <span className="flex items-center gap-2 text-slate-400 italic">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300">
+                      <Building2 size={16} />
+                    </div>
+                    Login to view employer
+                  </span>
+                )}
+                
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                  <MapPin size={14} className="text-slate-400" /> {job.location}
+                </span>
+                
+                {job.job_type && job.job_type.split(',').map((type, idx) => (
+                  <span key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg border border-slate-100 font-semibold text-slate-600">
+                    {type.trim()}
+                  </span>
+                ))}
+                
+                <span className="flex items-center gap-1.5 text-slate-500 font-medium text-xs px-3 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                  Posted: {new Date(job.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Main Description */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10">
+              <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Briefcase size={18} />
+                </div>
+                Job Description
+              </h2>
+              <div className="prose prose-slate max-w-none text-slate-600 whitespace-pre-wrap leading-relaxed text-base">
+                {job.description}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10">
+              <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <AlertCircle size={18} />
+                </div>
+                Key Requirements
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-600">
+                    <Users size={24} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Open Vacancies</div>
+                    <div className="font-bold text-slate-800 text-lg">{job.vacancies_count || 1} Positions</div>
+                  </div>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-600">
+                    <Calendar size={24} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Apply Before</div>
+                    <div className="font-bold text-slate-800 text-lg">
+                      {job.expiry_date ? new Date(job.expiry_date).toLocaleDateString() : 'No strict deadline'}
+                    </div>
+                  </div>
+                </div>
+                {job.salary_range && (
+                  <div className="bg-emerald-50/50 border border-emerald-100/50 p-4 rounded-2xl flex items-center gap-4 sm:col-span-2">
+                    <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-emerald-600">
+                      <Coins size={24} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Offered Salary Range</div>
+                      <div className="font-extrabold text-emerald-700 text-xl">{job.salary_range} / month</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 border-b border-slate-100 p-6">
+                <h3 className="text-lg font-black text-slate-900">Employer Details</h3>
+              </div>
+              
+              <div className="p-6">
+                {!isLoggedIn ? (
+                  <div className="text-center py-6">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                      <User size={32} />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-500 mb-4 leading-relaxed">
+                      Please log in to your account to view the employer's contact information and exact location.
+                    </p>
+                    <Link to="/login" className="inline-block px-6 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-colors">
+                      Login to View
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-slate-500">
+                        <Building2 size={18} />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Company Name</div>
+                        <Link 
+                          to={`/employers/${job.employer_id}`}
+                          className="font-bold text-slate-800 text-base hover:text-blue-600 transition-colors flex items-center gap-1 group/link"
+                        >
+                          {job.company_name}
+                          <ChevronRight size={16} className="text-slate-300 group-hover/link:text-blue-500 transition-all group-hover/link:translate-x-0.5" />
+                        </Link>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-slate-500">
+                        <User size={18} />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Contact Person</div>
+                        <div className="font-semibold text-slate-700">{job.contact_person || 'HR Department'}</div>
+                      </div>
+                    </div>
+
+                    {job.contact_phone && (
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 text-blue-500">
+                          <Phone size={18} />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Phone Number</div>
+                          <a href={`tel:${job.contact_phone}`} className="font-bold text-blue-600 hover:text-blue-700 hover:underline">
+                            {job.contact_phone}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {job.email && (
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 text-blue-500">
+                          <Mail size={18} />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Email Address</div>
+                          <a href={`mailto:${job.email}`} className="font-semibold text-blue-600 hover:text-blue-700 hover:underline block truncate max-w-[200px]" title={job.email}>
+                            {job.email}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {job.address && (
+                      <div className="pt-6 border-t border-slate-100">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-slate-500">
+                            <MapPin size={18} />
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Location Address</div>
+                            <div className="font-medium text-slate-600 text-sm leading-relaxed">
+                              {job.address}
+                            </div>
+                          </div>
+                        </div>
+                        {job.google_map_link && (
+                          <a 
+                            href={job.google_map_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 w-full py-3.5 bg-blue-50 text-blue-700 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-blue-100 transition-colors border border-blue-100 mt-2"
+                          >
+                            <Map size={14} /> Open Maps
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Similar Jobs Section */}
+      </div>
+        {similarJobs.length > 0 && (
+          <div className="w-full bg-blue-50 py-16 border-t border-blue-200 mt-auto">
+            <div className="max-w-5xl mx-auto px-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-black text-slate-900">
+                Similar Opportunities
+              </h2>
+              <Link to={`/jobs?type=${encodeURIComponent(job.job_type.split(',')[0].trim())}`} className="text-blue-600 font-bold hover:underline text-sm hidden sm:block">
+                View all {job.job_type.split(',')[0].trim()} jobs
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {similarJobs.map(simJob => (
+                <div key={simJob.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm transition-all block">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-black text-lg text-slate-900 line-clamp-1">{simJob.title}</h3>
+                    {!!simJob.is_urgent && (
+                      <span className="bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">Urgent</span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-slate-500 mb-4 line-clamp-1 flex items-center gap-1.5">
+                    <Building2 size={14} className="text-slate-400" />
+                    {isLoggedIn ? simJob.company_name : "Login to view employer"}
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-600 mb-6">
+                    <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                      <MapPin size={14} className="text-slate-400" /> {simJob.location}
+                    </span>
+                    {simJob.job_type && simJob.job_type.split(',').map((type, idx) => (
+                      <span key={idx} className="flex items-center gap-1 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100 font-semibold text-slate-600">
+                        {type.trim()}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <Link 
+                    to={`/jobs/${simJob.id}`}
+                    className="block w-full py-2.5 bg-blue-600 text-white text-center text-xs font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-100"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+          </div>
+        )}
+      {/* Custom Share Modal (Bottom Sheet on Mobile, Centered Card on Desktop) */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="fixed inset-0" 
+            onClick={() => setShowShareModal(false)}
+          />
+          <div className="relative w-full sm:max-w-md bg-white rounded-t-[2rem] sm:rounded-3xl shadow-2xl border border-slate-100 p-6 z-10 animate-in slide-in-from-bottom duration-300">
+            {/* Drag Handle for Mobile */}
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
+            
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <Share2 size={20} className="text-blue-600" />
+                Share Link
+              </h3>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              {/* WhatsApp */}
+              <a 
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowShareModal(false)}
+                className="flex flex-col items-center gap-2 group cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-all">
+                  <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12c0 2.17.7 4.19 1.94 5.86L2.6 22.1l4.42-1.31C8.61 21.49 10.23 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm4.85 14.15c-.23.65-1.16 1.18-1.85 1.25-.46.05-.98.08-2.92-.71-2.48-1.01-4.08-3.52-4.21-3.69-.12-.17-1.02-1.36-1.02-2.58s.64-1.83.87-2.07c.23-.23.51-.29.69-.29.17 0 .35.01.5.02.16.01.38-.06.59.44.22.52.75 1.83.82 1.97.07.15.12.32.02.51-.1.2-.15.32-.3.49-.15.17-.32.39-.46.52-.16.15-.33.31-.14.64.19.33.85 1.39 1.81 2.25.96.86 1.77 1.12 2.1 1.29.33.17.52.14.71-.08.19-.22.82-.96 1.04-1.29.22-.33.44-.28.74-.17.3.11 1.91.9 2.21 1.05.3.15.5.22.57.35.07.13.07.75-.16 1.4z"/>
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-slate-600">WhatsApp</span>
+              </a>
+
+              {/* Telegram */}
+              <a 
+                href={`https://t.me/share/url?url=${encodeURIComponent(shareData.url)}&text=${encodeURIComponent(shareData.text)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowShareModal(false)}
+                className="flex flex-col items-center gap-2 group cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-all">
+                  <Send size={20} className="ml-0.5" />
+                </div>
+                <span className="text-xs font-semibold text-slate-600">Telegram</span>
+              </a>
+
+              {/* Email */}
+              <a 
+                href={`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\nJobList.jsx:3: Link:`;
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: `${text} ${url}`
+      }).catch((err) => console.log('Error sharing:', err));
+    } else {
+      setShareData({ title, text, url });
+      setShowShareModal(true);
+    }
+  };
+
+  const downloadPDF = async () => {
+    setIsDownloading(true);
+    try {
+      const params = { ...Object.fromEntries(searchParams), limit: 1000, page: 1 };
+      const res = await axios.get('/api/jobs', { params });
+      const allJobs = res.data.jobs || [];
+
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      // Load Logo to get aspect ratio
+      const logoUrl = '/logo.png';
+      const getLogoDimensions = () => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const ratio = img.width / img.height;
+            resolve({ width: img.width, height: img.height, ratio });
+          };
+          img.onerror = () => resolve(null);
+          img.src = logoUrl;
+        });
+      };
+
+      const logoInfo = await getLogoDimensions();
+      
+      // Header - Compact & Clean
+      // Left: Logo
+      if (logoInfo) {
+        const targetWidth = 20; // Reduced from 30
+        const targetHeight = targetWidth / logoInfo.ratio;
+        doc.addImage(logoUrl, 'PNG', 14, 8, targetWidth, targetHeight);
+      }
+      
+      doc.setTextColor(30, 41, 59); // Slate-800
+      doc.setFontSize(8); // Reduced 50% from 14-16 range
+      doc.setFont('helvetica', 'bold');
+      doc.text('JOB VACANCY LIST', 196, 12, { align: 'right' });
+      
+      doc.setFontSize(6); // Further reduced
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100);
+      doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 196, 16, { align: 'right' });
+      doc.text(`Total Vacancies: ${allJobs.length}`, 196, 19, { align: 'right' });
+
+      // Horizontal separator
+      doc.setDrawColor(241, 245, 249); // Slate-100
+      doc.line(14, 24, 196, 24);
+
+      const tableColumn = ["#", "Job Title", "Employer", "Contact Details", "Location", "Address", "Expires", "Vacancies"];
+      const tableRows = [];
+
+      allJobs.forEach((job, index) => {
+        const contactInfo = [
+          job.contact_person || 'HR Dept',
+          job.contact_phone || ''
+        ].filter(Boolean).join('\nJobList.jsx:4: ');
+
+        const jobData = [
+          index + 1,
+          job.title,
+          job.company_name || 'Login to view',
+          contactInfo || 'N/A',
+          job.location,
+          job.address || '---',
+          job.expiry_date ? new Date(job.expiry_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'N/A',
+          `${job.vacancies_count || 1} Nos`
+        ];
+        tableRows.push(jobData);
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 28,
+        styles: { 
+          fontSize: 6.5,
+          cellPadding: 1.2,
+          valign: 'middle',
+          overflow: 'linebreak',
+          textColor: [51, 65, 85] // Slate-700
+        },
+        headStyles: {
+          fillColor: [255, 255, 255], // White background
+          textColor: [15, 23, 42], // Slate-900
+          fontSize: 6.5,
+          fontStyle: 'bold',
+          halign: 'center',
+          lineWidth: 0.1,
+          lineColor: [226, 232, 240] // Slate-200
+        },
+        columnStyles: {
+          0: { cellWidth: 7, halign: 'center' },
+          1: { cellWidth: 35, fontStyle: 'bold', textColor: [37, 99, 235] }, // Blue-600 for title
+          2: { cellWidth: 28 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 18 },
+          5: { cellWidth: 'auto' }, // Let address take remaining space
+          6: { cellWidth: 16, halign: 'center' },
+          7: { cellWidth: 14, halign: 'center' },
+        },
+        alternateRowStyles: {
+          fillColor: [255, 255, 255] // Removed striped background
+        },
+        margin: { top: 28, left: 10, right: 10 },
+        tableWidth: 'auto',
+        didDrawPage: (data) => {
+          // Footer
+          const pageCount = doc.internal.getNumberOfPages();
+          const pageCurrent = doc.internal.getCurrentPageInfo().pageNumber;
+          
+          doc.setFontSize(7);
+          doc.setTextColor(148, 163, 184); // Slate-400
+          
+          // Use dynamic footer from settings or fallback
+          const rawFooter = settings?.pdf_footer_text || "by Local Municipal Authority. Powered by eglobe IT Solutions.";
+          const cleanFooter = rawFooter.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          
+          const year = new Date().getFullYear();
+          const appName = settings?.app_name || "JobConnect";
+          const fullFooter = `© ${year} ${appName} • ${cleanFooter}`;
+          const currentUrl = window.location.href;
+          
+          doc.text(fullFooter, 14, 287);
+          doc.setFontSize(6);
+          doc.setTextColor(100, 116, 139); // Slate-500
+          doc.text(`Search Filters: ${currentUrl}`, 14, 291);
+          
+          doc.setFontSize(7);
+          doc.setTextColor(148, 163, 184); // Slate-400
+          doc.text(`Page ${pageCurrent} of ${pageCount}`, 196, 287, { align: 'right' });
+        }
+      });
+
+      doc.save(`Job_Vacancies_${new Date().toISOString().slice(0,10)}.pdf`);
+    } catch (err) {
+      console.error("Error generating PDF", err);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const isLoggedIn = !!localStorage.getItem('role');
+
+  return (
+    <div className="flex flex-col min-h-[calc(100vh-64px)] pb-20">
+      <div className="bg-blue-50 border-b border-blue-100 py-10 mb-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
+                <Filter size={20} />
+              </div>
+              {companyFilter ? `Jobs at "${companyFilter}"` : searchFilter ? `Search: "${searchFilter}"` : 'Job Opportunities'} 
+              <span className="text-blue-600 font-medium ml-1">({total})</span>
+            </h2>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              
+              {hasAnyFilter && (
+                <button 
+                  onClick={clearAllFilters}
+                  className="h-10 px-4 flex items-center gap-2 bg-white text-orange-600 rounded-xl text-sm font-bold border border-orange-200 hover:bg-orange-50 transition-all shadow-sm"
+                >
+                  <X size={16} />
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3 w-full">
+              <div className="relative group flex-grow">
+                <input 
+                  type="text" 
+                  placeholder="Search jobs or companies..."
+                  className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-slate-700 font-semibold shadow-sm"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+              </div>
+              <button 
+                type="submit" 
+                className="h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 shrink-0"
+              >
+                <Search size={20} />
+                Search
+              </button>
+            </form>
+
+            <div className="flex flex-col lg:flex-row flex-wrap lg:items-center gap-4">
+              <div className="text-slate-500 font-bold text-sm uppercase tracking-wider shrink-0 lg:mb-0 mb-1 ml-1">Filter by</div>
+              
+              {/* Primary Region Filter */}
+              <div className="relative flex-1 min-w-[200px]">
+                <select 
+                  className="w-full h-14 px-5 pr-12 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-slate-700 font-semibold appearance-none cursor-pointer shadow-sm"
+                  value={selectedPrimary}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    updateLocationFilters(val, '');
+                  }}
+                >
+                  <option value="">All Regions / Districts</option>
+                  {locations.filter(l => !l.parent_id).map(parent => (
+                    <option key={parent.id} value={parent.name}>{parent.name}</option>
+                  ))}
+                </select>
+                <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+
+              {/* Sub-place / Area Filter */}
+              <div className="relative flex-1 min-w-[200px]">
+                <select 
+                  className="w-full h-14 px-5 pr-12 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-slate-700 font-semibold appearance-none cursor-pointer shadow-sm disabled:opacity-60 disabled:bg-slate-50/50 disabled:cursor-not-allowed"
+                  value={selectedSubPlace}
+                  disabled={!selectedPrimary}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    updateLocationFilters(selectedPrimary, val);
+                  }}
+                >
+                  <option value="">{selectedPrimary ? "All Areas / Sub-places" : "Select Region First"}</option>
+                  {subPlaces.map(child => (
+                    <option key={child.id} value={child.name}>{child.name}</option>
+                  ))}
+                </select>
+                <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+
+              <div className="relative flex-1 min-w-[200px]">
+                <select 
+                  className="w-full h-14 px-5 pr-12 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-slate-700 font-semibold appearance-none cursor-pointer shadow-sm"
+                  value={typeFilter}
+                  onChange={(e) => updateFilter('type', e.target.value)}
+                >
+                  <option value="">All Job Types</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Daily Wages">Daily Wages</option>
+                </select>
+                <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-6 px-2 lg:ml-2 shrink-0">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input 
+                      type="checkbox" 
+                      className="peer appearance-none w-6 h-6 rounded-lg border-2 border-slate-300 checked:bg-red-600 checked:border-red-600 transition-all cursor-pointer bg-white"
+                      checked={urgentFilter}
+                      onChange={(e) => updateFilter('urgent', e.target.checked ? 'true' : '')}
+                    />
+                    <Check size={14} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white scale-0 peer-checked:scale-100 transition-transform" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-600 group-hover:text-red-600 transition-colors">Only Urgent</span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input 
+                      type="checkbox" 
+                      className="peer appearance-none w-6 h-6 rounded-lg border-2 border-slate-300 checked:bg-green-600 checked:border-green-600 transition-all cursor-pointer bg-white"
+                      checked={verifiedFilter}
+                      onChange={(e) => updateFilter('verified', e.target.checked ? 'true' : '')}
+                    />
+                    <Check size={14} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white scale-0 peer-checked:scale-100 transition-transform" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-600 group-hover:text-green-600 transition-colors">Verified Only</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col md:flex-row items-stretch md:items-center gap-4 relative z-10 pointer-events-auto">
+            <div className="hidden sm:flex flex-grow min-w-0 h-9 border border-slate-200/80 rounded-xl flex-row items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 px-4 text-blue-600 font-black uppercase text-xs tracking-widest shrink-0">
+                <Share2 size={14} />
+                SHARE
+              </div>
+              <div className="flex-grow min-w-0 truncate text-xs text-slate-500 font-mono px-2 select-all">
+                {window.location.href}
+              </div>
+              <button 
+                onClick={handleShare}
+                className={`h-9 w-28 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all shrink-0 cursor-pointer ${
+                  copied 
+                    ? 'text-green-600 bg-green-50/50' 
+                    : 'text-blue-600 hover:bg-blue-50/80'
+                }`}
+              >
+                {copied ? <Check size={16} strokeWidth={3} /> : <Copy size={16} strokeWidth={2.5} />}
+                <span className="w-12 text-left">{copied ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+
+            {/* Mobile Share Link Option */}
+            <button 
+              onClick={handleShare}
+              className={`flex sm:hidden h-10 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold border transition-all shrink-0 cursor-pointer ${
+                copied 
+                  ? 'text-green-600 bg-green-50 border-green-200' 
+                  : 'text-blue-600 bg-blue-50 border-blue-100 hover:bg-blue-100'
+              }`}
+            >
+              {copied ? <Check size={16} /> : <Share2 size={16} />}
+              {copied ? 'Link Copied' : 'Share Link'}
+            </button>
+
+            <button 
+              onClick={downloadPDF}
+              disabled={isDownloading || jobs.length === 0}
+              className="hidden md:flex h-9 px-4 items-center gap-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-blue-700 transition-all shadow-md shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            >
+              {isDownloading ? (
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Download size={14} />
+              )}
+              {isDownloading ? 'Generating...' : 'Download'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 w-full">
+
+      {/* List logic */}
+      {loading ? (
+        <div className="text-center py-20 text-slate-400">Loading jobs...</div>
+      ) : jobs.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-dashed border-slate-200 shadow-sm">
+          <div className="relative mb-6">
+            <div className="w-20 h-20 bg-slate-50/80 rounded-full flex items-center justify-center border border-slate-100 shadow-inner">
+              <Briefcase size={36} className="text-slate-300" strokeWidth={1.5} />
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-2 shadow-lg border border-slate-100">
+              <SearchX size={18} className="text-slate-400" strokeWidth={2.5} />
+            </div>
+          </div>
+          <h3 className="text-xl font-black text-slate-800 mb-2">No Jobs Found</h3>
+          <p className="text-slate-500 font-medium text-sm max-w-sm text-center mb-6 leading-relaxed">
+            We couldn't find any job opportunities matching your current search criteria.
+          </p>
+          {hasAnyFilter && (
+            <button 
+              onClick={clearAllFilters} 
+              className="px-6 py-3 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold border border-blue-100 hover:bg-blue-100 hover:border-blue-200 transition-all shadow-sm"
+            >
+              Clear All Filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4">
+            {jobs.map((job) => (
+              <div key={job.id} className="bg-white pt-8 px-5 pb-5 rounded-2xl border border-slate-100 shadow-sm transition-shadow relative">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                  {!!job.is_urgent && (
+                    <div className="absolute top-0 right-0 px-3 py-1 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest rounded-bl-xl shadow-md z-10 animate-pulse">
+                      Urgent
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h3 className="text-xl font-bold text-slate-900 leading-tight">{job.title}</h3>
+                      {job.job_post_id && (
+                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold border border-slate-200 shadow-sm whitespace-nowrap">
+                          ID: {job.job_post_id}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center flex-wrap gap-2 mb-3">
+                      <p className="text-blue-600 font-bold text-sm">
+                        {isLoggedIn ? job.company_name : "Login to see the details"}
+                      </p>
+                      {isLoggedIn && (
+                        job.is_gst_verified === 1 ? (
+                          <span className="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border border-blue-100 shadow-sm whitespace-nowrap">
+                            <ShieldCheck size={10} strokeWidth={3} />
+                            GST Verified
+                          </span>
+                        ) : job.is_verified === 1 ? (
+                          <span className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border border-emerald-100 shadow-sm whitespace-nowrap">
+                            <ShieldCheck size={10} strokeWidth={3} />
+                            Verified by Admin
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border border-amber-100 shadow-sm whitespace-nowrap">
+                            <Clock size={10} strokeWidth={3} />
+                            Not Verified
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 text-xs md:text-sm text-slate-500 md:mt-1">
+                    {isLoggedIn && (
+                      <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                        <MapPin size={16} className="text-slate-400" />
+                        {job.location}
+                      </span>
+                    )}
+                    {job.job_type && job.job_type.split(',').map((type, idx) => (
+                      <span key={idx} className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100 font-semibold text-slate-600">
+                        {type.trim()}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-50 flex flex-col gap-3">
+                  <p className="text-slate-600 text-sm line-clamp-2">{job.description}</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                    <div className="p-3 rounded-lg bg-slate-50 border border-slate-100">
+                      <div className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Location & Contact</div>
+                      
+                      {isLoggedIn ? (
+                        <>
+                          {job.address && (
+                            <div className="flex items-start gap-2 text-sm text-slate-700 mb-2">
+                              <MapPin size={14} className="mt-1 shrink-0 text-slate-400" />
+                              <span className="leading-tight">{job.address}</span>
+                            </div>
+                          )}
+
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="text-sm font-semibold text-slate-700 flex items-center gap-1">
+                              <User size={14} className="text-slate-400" />
+                              {job.contact_person || 'HR Dept'}
+                            </div>
+                            
+                            {job.contact_phone && (
+                              <div className="text-sm text-blue-600 font-bold">
+                                {job.contact_phone}
+                              </div>
+                            )}
+                          </div>
+
+                          {job.google_map_link && (
+                            <a 
+                              href={job.google_map_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-blue-600 hover:text-blue-700"
+                            >
+                              <Map size={14} />
+                              View on Google Maps
+                            </a>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-xs text-slate-400 italic flex items-center gap-1.5 mt-1">
+                          <AlertCircle size={12} className="text-slate-400 shrink-0" />
+                          Login to see location & contact details
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 flex flex-col justify-between">
+                      <div>
+                        <div className="text-xs uppercase tracking-wider text-blue-400 font-bold mb-1">Requirements</div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-600">Vacancies:</span>
+                          <span className="font-bold text-blue-600">{job.vacancies_count || 1} Nos</span>
+                        </div>
+                        {job.salary_range && (
+                          <div className="flex justify-between items-center text-sm mt-1">
+                            <span className="text-slate-600">Salary:</span>
+                            <span className="font-bold text-emerald-600">{job.salary_range}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center text-sm mt-1 mb-3">
+                          <span className="text-slate-600">Apply Before:</span>
+                          <span className="font-bold text-red-500">
+                            {job.expiry_date ? new Date(job.expiry_date).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <Link 
+                        to={`/jobs/${job.id}`}
+                        className="w-full py-2 bg-blue-600 text-white text-center text-xs font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-colors mt-2 shadow-md shadow-blue-100"
+                      >
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-wrap justify-center items-center gap-2 mt-10">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 md:px-4 py-2 border border-slate-200 rounded-lg bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-all text-sm md:text-base font-medium"
+              >
+                Previous
+              </button>
+              
+              <div className="flex flex-wrap justify-center gap-1">
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center font-bold text-sm md:text-base transition-all ${
+                      page === i + 1 
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 md:px-4 py-2 border border-slate-200 rounded-lg bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-all text-sm md:text-base font-medium"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+      {/* Custom Share Modal (Bottom Sheet on Mobile, Centered Card on Desktop) */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="fixed inset-0" 
+            onClick={() => setShowShareModal(false)}
+          />
+          <div className="relative w-full sm:max-w-md bg-white rounded-t-[2rem] sm:rounded-3xl shadow-2xl border border-slate-100 p-6 z-10 animate-in slide-in-from-bottom duration-300">
+            {/* Drag Handle for Mobile */}
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
+            
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <Share2 size={20} className="text-blue-600" />
+                Share Link
+              </h3>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              {/* WhatsApp */}
+              <a 
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowShareModal(false)}
+                className="flex flex-col items-center gap-2 group cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-all">
+                  <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12c0 2.17.7 4.19 1.94 5.86L2.6 22.1l4.42-1.31C8.61 21.49 10.23 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm4.85 14.15c-.23.65-1.16 1.18-1.85 1.25-.46.05-.98.08-2.92-.71-2.48-1.01-4.08-3.52-4.21-3.69-.12-.17-1.02-1.36-1.02-2.58s.64-1.83.87-2.07c.23-.23.51-.29.69-.29.17 0 .35.01.5.02.16.01.38-.06.59.44.22.52.75 1.83.82 1.97.07.15.12.32.02.51-.1.2-.15.32-.3.49-.15.17-.32.39-.46.52-.16.15-.33.31-.14.64.19.33.85 1.39 1.81 2.25.96.86 1.77 1.12 2.1 1.29.33.17.52.14.71-.08.19-.22.82-.96 1.04-1.29.22-.33.44-.28.74-.17.3.11 1.91.9 2.21 1.05.3.15.5.22.57.35.07.13.07.75-.16 1.4z"/>
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-slate-600">WhatsApp</span>
+              </a>
+
+              {/* Telegram */}
+              <a 
+                href={`https://t.me/share/url?url=${encodeURIComponent(shareData.url)}&text=${encodeURIComponent(shareData.text)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowShareModal(false)}
+                className="flex flex-col items-center gap-2 group cursor-pointer"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-all">
+                  <Send size={20} className="ml-0.5" />
+                </div>
+                <span className="text-xs font-semibold text-slate-600">Telegram</span>
+              </a>
+
+              {/* Email */}
+              <a 
+                href={`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text + '\nStaticPage.jsx:1: import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { ArrowLeft, Clock } from 'lucide-react';
+
+const StaticPage = () => {
+    const { slug } = useParams();
+    const [page, setPage] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchPage = async () => {
+            try {
+                const res = await axios.get(`/api/pages/${slug}`);
+                setPage(res.data);
+            } catch (err) {
+                console.error("Page fetch failed", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPage();
+    }, [slug]);
+
+    if (loading) return <div className="p-20 text-center text-slate-400">Loading content...</div>;
+    if (!page) return (
+        <div className="p-20 text-center">
+            <h1 className="text-2xl font-bold text-slate-800">404 - Page Not Found</h1>
+            <button onClick={() => navigate('/')} className="mt-4 text-blue-600 font-bold hover:underline">Back to Home</button>
+        </div>
+    );
+
+    return (
+        <div className="bg-white min-h-screen">
+            {/* Header */}
+            <div className="bg-slate-50 border-b border-slate-100 py-12">
+                <div className="max-w-4xl mx-auto px-4">
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold text-sm mb-6 transition-colors"
+                    >
+                        <ArrowLeft size={16} />
+                        Go Back
+                    </button>
+                    <h1 className="text-4xl font-black text-slate-900 mb-4">{page.title}</h1>
+                    <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                        <Clock size={14} />
+                        Last updated {new Date(page.created_at).toLocaleDateString()}
+                    </div>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="max-w-4xl mx-auto px-4 py-12 pb-24">
+                <div 
+                    className="prose prose-slate max-w-none text-slate-700 leading-relaxed cms-content"
+                    dangerouslySetInnerHTML={{ __html: page.content }}
+                />
+            </div>
+
+            <style>{`
+                .cms-content h1 { font-size: 2rem; font-weight: 800; margin-bottom: 1rem; color: #1e293b; }
+                .cms-content h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; color: #334155; }
+                .cms-content p { margin-bottom: 1.25rem; }
+                .cms-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1.25rem; }
+                .cms-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1.25rem; }
+                .cms-content li { margin-bottom: 0.5rem; }
+                .cms-content strong { color: #000; font-weight: 700; }
+                .cms-content blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; italic; color: #64748b; margin: 1.5rem 0; }
+            `}</style>
+        </div>
+    );
+};
+
+export default StaticPage;\n

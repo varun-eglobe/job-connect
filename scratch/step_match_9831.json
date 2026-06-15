@@ -1,0 +1,1 @@
+  - Removed the Email Address display section from the profile quick details summary header and adjusted columns layout to two columns.\"","StartLine":"25","TargetContent":"\"- Modified [EmployerDashboard.jsx](file:///g:/Varun/Projects/Job%20Connect/client/src/pages/EmployerDashboard.jsx):\

@@ -1,0 +1,936 @@
+e.target.value.replace(/\D/g,``))}
+)]}
+),f&&(0,Z.jsx)(`div`,{
+className:`p-4 rounded-xl text-sm ${
+f.includes(`successful`)?`bg-green-50 text-green-600`:`bg-red-50 text-red-600`}
+`,children:f}
+),(0,Z.jsxs)(`div`,{
+className:`flex flex-col gap-3`,children:[(0,Z.jsxs)(`button`,{
+type:`submit`,disabled:u,className:`w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-blue-100`,children:[u?`Verifying OTP...`:`Verify & Register`,!u&&(0,Z.jsx)(Kn,{
+size:18}
+)]}
+),(0,Z.jsx)(`button`,{
+type:`button`,onClick:()=>{
+a(1),p(``)}
+,className:`w-full h-12 text-slate-500 font-bold hover:text-slate-800 transition-all text-sm`,children:`Back to Registration`}
+)]}
+)]}
+)]}
+)}
+)}
+,M_=()=>{
+let[e,t]=(0,v.useState)([]),[n,r]=(0,v.useState)(!0);
+return(0,v.useEffect)(()=>{
+(async()=>{
+try{
+t((await X.get(`/api/helpdesks`)).data)}
+catch(e){
+console.error(`Error fetching helpdesks`,e)}
+finally{
+r(!1)}
+}
+)()}
+,[]),(0,Z.jsxs)(`div`,{
+className:`max-w-4xl mx-auto px-4 py-8 space-y-8 pb-20`,children:[(0,Z.jsxs)(`div`,{
+className:`bg-blue-50 rounded-3xl p-8 text-blue-950 mb-10 overflow-hidden relative border border-blue-100`,children:[(0,Z.jsx)(ir,{
+className:`absolute -right-6 -top-6 w-48 h-48 opacity-10 text-blue-600`}
+),(0,Z.jsx)(`h1`,{
+className:`text-3xl font-bold mb-2 text-blue-900`,children:`Offline Helpdesk`}
+),(0,Z.jsx)(`p`,{
+className:`text-blue-700 max-w-md font-medium`,children:`Need help registering or finding a job? Visit our physical helpdesks located across your region.`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`space-y-10`,children:[(0,Z.jsxs)(`section`,{
+children:[(0,Z.jsxs)(`h2`,{
+className:`text-xl font-bold text-slate-800 mb-6 flex items-center gap-2`,children:[(0,Z.jsx)(wr,{
+size:22,className:`text-blue-600`}
+),`Support Locations Near You`]}
+),n?(0,Z.jsx)(`div`,{
+className:`text-slate-400 italic`,children:`Finding locations...`}
+):e.length===0?(0,Z.jsx)(`div`,{
+className:`p-10 bg-slate-100 rounded-2xl text-center text-slate-500`,children:`No helpdesk information available at the moment.`}
+):(0,Z.jsx)(`div`,{
+className:`grid gap-4`,children:e.map(e=>(0,Z.jsxs)(`div`,{
+className:`bg-white p-6 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-blue-200 group`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`h3`,{
+className:`text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors`,children:e.name}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-2 text-slate-500 text-sm mt-2`,children:[(0,Z.jsx)(Cr,{
+size:14,className:`shrink-0`}
+),e.address]}
+)]}
+),(0,Z.jsxs)(`a`,{
+href:`tel:${
+e.contact_info}
+`,className:`flex items-center justify-center gap-2 h-12 px-6 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-black transition-all`,children:[(0,Z.jsx)(Ar,{
+size:16}
+),e.contact_info]}
+)]}
+,e.id))}
+)]}
+),(0,Z.jsxs)(`section`,{
+className:`bg-slate-50 p-8 rounded-3xl border border-slate-100`,children:[(0,Z.jsx)(`h3`,{
+className:`font-bold text-slate-800 mb-4`,children:`How it works?`}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm`,children:[(0,Z.jsxs)(`div`,{
+className:`space-y-2`,children:[(0,Z.jsx)(`div`,{
+className:`w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold`,children:`1`}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-600 leading-relaxed font-medium`,children:`Visit any Ward Councilor or Panchayat office.`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`space-y-2`,children:[(0,Z.jsx)(`div`,{
+className:`w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold`,children:`2`}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-600 leading-relaxed font-medium`,children:`Ask for the 'Job Connect' helpdesk volunteer.`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`space-y-2`,children:[(0,Z.jsx)(`div`,{
+className:`w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold`,children:`3`}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-600 leading-relaxed font-medium`,children:`They will help you register and search for jobs on-site.`}
+)]}
+)]}
+)]}
+)]}
+)]}
+)}
+,N_=()=>{
+let e=new Date;
+return`${
+e.getFullYear()}
+-${
+String(e.getMonth()+1).padStart(2,`0`)}
+-${
+String(e.getDate()).padStart(2,`0`)}
+`}
+,P_=()=>{
+let[e,t]=(0,v.useState)(!1),[n,r]=(0,v.useState)(!1),[i,a]=(0,v.useState)(!1),[o,s]=(0,v.useState)(null),[c,l]=(0,v.useState)(`pending`),[u,d]=(0,v.useState)(!1),[f,p]=(0,v.useState)(null),[m,h]=(0,v.useState)({
+title:``,description:``,location:`Pattom`,job_type:`Full-time`,vacancies_count:1,expiry_date:``,contact_person:``,contact_phone:``,status:`active`,is_urgent:!1,salary_range:``}
+),[g,_]=(0,v.useState)(``),y=Xe(),b=localStorage.getItem(`user_id`);
+(0,v.useEffect)(()=>{
+let e=localStorage.getItem(`role`);
+e!==`employer`&&e!==`admin`&&y(`/login`)}
+,[y]);
+let[x,S]=(0,v.useState)([]),[C,w]=(0,v.useState)([]),[T,E]=(0,v.useState)(!0),D=C.find(e=>e.name===m.location),O=``,k=``;
+if(D)if(!D.parent_id)O=D.name;
+else{
+let e=C.find(e=>e.id===D.parent_id);
+O=e?e.name:``,k=D.name}
+let A=C.find(e=>e.name===O&&!e.parent_id),j=A?C.filter(e=>e.parent_id===A.id):[];
+(0,v.useEffect)(()=>{
+let e=async()=>{
+try{
+let e=await X.get(`/api/users/${
+b}
+`);
+s(e.data),t(!!e.data.is_verified),r(!!e.data.is_gst_verified),a(!!e.data.is_approved),l(e.data.payment_status)}
+catch(e){
+console.error(`Error fetching status`,e)}
+}
+,n=async()=>{
+try{
+S((await X.get(`/api/jobs?employer_id=${
+b}
+`)).data.jobs)}
+catch(e){
+console.error(`Error fetching jobs`,e)}
+finally{
+E(!1)}
+}
+,i=async()=>{
+try{
+let e=await X.get(`/api/locations`);
+w(e.data),e.data.length>0&&!m.location&&h(t=>({
+...t,location:e.data[0].name}
+))}
+catch(e){
+console.error(`Error fetching locations`,e)}
+}
+;
+if(b){
+e(),n(),i();
+let t=setInterval(()=>{
+e(),n()}
+,5e3);
+return()=>clearInterval(t)}
+}
+,[b]);
+let M=async e=>{
+if(e.preventDefault(),m.expiry_date&&m.expiry_date<N_()){
+_({
+type:`error`,text:`Expiry date cannot be in the past.`}
+);
+return}
+try{
+f?(await X.put(`/api/jobs/${
+f}
+`,{
+...m,employer_id:b}
+),_({
+type:`success`,text:`Job updated successfully!`}
+)):(await X.post(`/api/jobs`,{
+...m,employer_id:b}
+),_({
+type:`success`,text:`Job posted successfully!`}
+)),d(!1),p(null),h({
+title:``,description:``,location:`Pattom`,job_type:`Full-time`,vacancies_count:1,expiry_date:``,contact_person:``,contact_phone:``,status:`active`,is_urgent:!1,salary_range:``}
+),S((await X.get(`/api/jobs?employer_id=${
+b}
+`)).data.jobs)}
+catch(e){
+_({
+type:`error`,text:e.response?.data?.error||`Operation failed.`}
+)}
+}
+,N=e=>{
+let t=e.expiry_date?new Date(e.expiry_date).toISOString().split(`T`)[0]:``;
+h({
+title:e.title,description:e.description,location:e.location,job_type:e.job_type,vacancies_count:e.vacancies_count,expiry_date:t,contact_person:e.contact_person,contact_phone:e.contact_phone,status:e.status,is_urgent:!!e.is_urgent,salary_range:e.salary_range||``}
+),p(e.id),d(!0)}
+;
+return(0,Z.jsxs)(`div`,{
+className:`max-w-5xl mx-auto px-4 py-8 space-y-8`,children:[(0,Z.jsxs)(`div`,{
+className:`relative bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm overflow-hidden`,children:[(0,Z.jsx)(`div`,{
+className:`absolute top-0 right-0 w-64 h-64 bg-blue-50/50 blur-[100px] -mr-32 -mt-32`}
+),(0,Z.jsx)(`div`,{
+className:`absolute bottom-0 left-0 w-64 h-64 bg-indigo-50/50 blur-[100px] -ml-32 -mb-32`}
+),(0,Z.jsxs)(`div`,{
+className:`relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8`,children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-6`,children:[(0,Z.jsx)(`div`,{
+className:`w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-500/20`,children:o?.company_name?.[0]||`E`}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-3 mb-1`,children:[(0,Z.jsx)(`h1`,{
+className:`text-3xl font-black text-slate-900`,children:o?.company_name||`Your Business`}
+),e&&(0,Z.jsx)(rr,{
+className:`text-blue-500`,size:24}
+)]}
+),(0,Z.jsxs)(`p`,{
+className:`text-slate-500 flex items-center gap-2 text-sm font-medium`,children:[(0,Z.jsx)(Gr,{
+size:14,className:`text-blue-400`}
+),o?.name||`Contact Person`,` • Employer Account`]}
+)]}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`flex flex-wrap gap-3`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`relative mt-8 pt-8 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6`,children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-4 text-slate-600`,children:[(0,Z.jsx)(`div`,{
+className:`w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100`,children:(0,Z.jsx)(Ar,{
+size:18,className:`text-blue-500`}
+)}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`p`,{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-bold`,children:`Contact Phone`}
+),(0,Z.jsx)(`p`,{
+className:`text-sm font-semibold text-slate-700`,children:o?.phone||`---`}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-4 text-slate-600`,children:[(0,Z.jsx)(`div`,{
+className:`w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100`,children:(0,Z.jsx)(Cr,{
+size:18,className:`text-blue-500`}
+)}
+),(0,Z.jsxs)(`div`,{
+className:`flex-1 min-w-0`,children:[(0,Z.jsx)(`p`,{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-bold`,children:`Base Location`}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center justify-between gap-2`,children:[(0,Z.jsx)(`p`,{
+className:`text-sm font-semibold truncate text-slate-700`,children:o?.address||`---`}
+),o?.google_map_link&&(0,Z.jsx)(`a`,{
+href:o.google_map_link,target:`_blank`,rel:`noreferrer`,className:`text-blue-500 hover:text-blue-700`,children:(0,Z.jsx)(mr,{
+size:14}
+)}
+)]}
+)]}
+)]}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 md:grid-cols-3 gap-6`,children:[(0,Z.jsxs)(`div`,{
+className:`bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm space-y-4`,children:[(0,Z.jsx)(`div`,{
+className:`flex items-center justify-between`,children:(0,Z.jsxs)(`h3`,{
+className:`font-bold text-slate-800 flex items-center gap-2`,children:[(0,Z.jsx)(Br,{
+size:18,className:`text-blue-600`}
+),`Account Status`]}
+)}
+),(0,Z.jsxs)(`div`,{
+className:`space-y-3`,children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center justify-between p-3 rounded-2xl ${
+i?`bg-green-50 border border-green-100`:`bg-orange-50 border border-orange-100`}
+`,children:[(0,Z.jsx)(`span`,{
+className:`text-[11px] uppercase tracking-wider ${
+i?`text-green-700`:`text-orange-700`}
+ font-bold`,children:`Listing Approval`}
+),(0,Z.jsxs)(`span`,{
+className:`flex items-center gap-1 ${
+i?`text-green-600`:`text-orange-600`}
+ text-xs font-black`,children:[i?(0,Z.jsx)(rr,{
+size:14}
+):(0,Z.jsx)(ar,{
+size:14}
+),i?`APPROVED`:`PENDING`]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center justify-between p-3 rounded-2xl ${
+n?`bg-blue-50 border border-blue-100`:e?`bg-green-50 border border-green-100`:`bg-slate-50 border border-slate-100`}
+`,children:[(0,Z.jsx)(`span`,{
+className:`text-[11px] uppercase tracking-wider ${
+n?`text-blue-700`:e?`text-green-700`:`text-slate-700`}
+ font-bold`,children:`Verified Badge`}
+),(0,Z.jsxs)(`span`,{
+className:`flex items-center gap-1 ${
+n?`text-blue-600`:e?`text-green-600`:`text-slate-500`}
+ text-xs font-black`,children:[e?(0,Z.jsx)(rr,{
+size:14}
+):(0,Z.jsx)(ar,{
+size:14}
+),n?`GST VERIFIED`:e?`VERIFIED BY ADMIN`:`NOT VERIFIED`]}
+)]}
+)]}
+),!i&&(0,Z.jsxs)(`div`,{
+className:`p-4 rounded-2xl bg-orange-50/50 text-[11px] text-orange-800 leading-relaxed flex gap-3`,children:[(0,Z.jsx)(tr,{
+size:16,className:`shrink-0 text-orange-500`}
+),(0,Z.jsx)(`p`,{
+children:`Your account is under review. Jobs will be visible once approved.`}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`md:col-span-2 bg-blue-50 text-slate-900 p-8 rounded-[2rem] border border-blue-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8`,children:[(0,Z.jsx)(`div`,{
+className:`absolute top-0 right-0 w-32 h-32 bg-blue-200/20 blur-3xl -mr-16 -mt-16`}
+),(0,Z.jsx)(qn,{
+className:`absolute -right-8 -bottom-8 text-blue-200/20 w-48 h-48 rotate-12`}
+),(0,Z.jsxs)(`div`,{
+className:`relative flex-1`,children:[(0,Z.jsx)(`h3`,{
+className:`font-bold text-blue-600 uppercase tracking-[0.2em] text-[10px] mb-6`,children:`Active Vacancies`}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-baseline gap-4`,children:[(0,Z.jsx)(`div`,{
+className:`text-7xl font-black tracking-tighter text-blue-600`,children:x.length}
+),(0,Z.jsxs)(`div`,{
+className:`space-y-1`,children:[(0,Z.jsxs)(`p`,{
+className:`text-slate-600 text-sm font-medium`,children:[x.filter(e=>e.status===`active`).length,` currently live jobs`]}
+),(0,Z.jsx)(`div`,{
+className:`h-1.5 w-32 bg-blue-200 rounded-full overflow-hidden`,children:(0,Z.jsx)(`div`,{
+className:`h-full bg-blue-600 transition-all duration-1000`,style:{
+width:`${
+x.length>0?x.filter(e=>e.status===`active`).length/x.length*100:0}
+%`}
+}
+)}
+)]}
+)]}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`relative`,children:!u&&(0,Z.jsxs)(`button`,{
+onClick:()=>d(!0),className:`group relative flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 h-16 rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-95 overflow-hidden whitespace-nowrap`,children:[(0,Z.jsx)(`div`,{
+className:`absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700`}
+),(0,Z.jsx)(`div`,{
+className:`w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center`,children:(0,Z.jsx)(jr,{
+size:20}
+)}
+),(0,Z.jsx)(`span`,{
+children:`Post New Job`}
+)]}
+)}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden`,children:[(0,Z.jsxs)(`div`,{
+className:`p-8 border-b border-slate-50 flex items-center justify-between`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`h3`,{
+className:`text-2xl font-black text-slate-900 tracking-tight`,children:`Your Recent Listings`}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-500 text-sm mt-1`,children:`Manage and monitor your active job vacancies`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-xl text-[10px] uppercase tracking-widest text-slate-400 font-black`,children:[(0,Z.jsx)(ar,{
+size:14,className:`text-blue-400`}
+),` Last Sync: Just Now`]}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`p-8`,children:T?(0,Z.jsxs)(`div`,{
+className:`flex items-center justify-center py-20 text-slate-400 gap-3`,children:[(0,Z.jsx)(`div`,{
+className:`w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin`}
+),(0,Z.jsx)(`span`,{
+className:`font-bold uppercase tracking-widest text-xs`,children:`Syncing jobs...`}
+)]}
+):x.length===0?(0,Z.jsxs)(`div`,{
+className:`bg-slate-50 p-20 rounded-[2rem] border border-dashed border-slate-200 text-center`,children:[(0,Z.jsx)(`div`,{
+className:`w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm`,children:(0,Z.jsx)(qn,{
+size:32,className:`text-slate-300`}
+)}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-500 font-bold`,children:`You haven't posted any jobs yet.`}
+),(0,Z.jsx)(`button`,{
+onClick:()=>d(!0),className:`mt-4 text-blue-600 font-bold text-sm hover:underline`,children:`Create your first listing`}
+)]}
+):(0,Z.jsx)(`div`,{
+className:`grid grid-cols-1 gap-6`,children:x.map(e=>{
+let t=e.expiry_date&&new Date(e.expiry_date).toISOString().split(`T`)[0]<new Date().toISOString().split(`T`)[0];
+return(0,Z.jsxs)(`div`,{
+className:`group rounded-3xl border transition-all duration-300 relative overflow-hidden flex flex-col ${
+t?`bg-red-50/50 border-red-100 shadow-sm`:`bg-white border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-500/5`}
+`,children:[(0,Z.jsx)(`div`,{
+className:`absolute top-0 right-0`,children:(0,Z.jsx)(`div`,{
+className:`px-4 py-1.5 rounded-bl-xl text-[10px] font-black uppercase tracking-widest ${
+e.status===`active`?`bg-green-100 text-green-600`:`bg-slate-100 text-slate-500`}
+`,children:e.status}
+)}
+),(0,Z.jsxs)(`div`,{
+className:`pt-8 px-6 pb-6 flex-1`,children:[(0,Z.jsxs)(`div`,{
+className:`flex justify-between items-start mb-4`,children:[(0,Z.jsxs)(`div`,{
+className:`flex-1 pr-12`,children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-3 mb-1 flex-wrap`,children:[(0,Z.jsx)(`h4`,{
+className:`text-lg font-black tracking-tight group-hover:text-blue-600 transition-colors line-clamp-1 ${
+t?`text-slate-700`:`text-slate-900`}
+`,children:e.title}
+),e.job_post_id&&(0,Z.jsxs)(`span`,{
+className:`px-2 py-0.5 bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-wider rounded-md border border-slate-200 shadow-sm whitespace-nowrap`,children:[`ID: `,e.job_post_id]}
+),!!e.is_urgent&&(0,Z.jsx)(`span`,{
+className:`px-2 py-0.5 bg-red-100 text-red-600 text-[9px] font-black uppercase tracking-wider rounded-md border border-red-200 animate-pulse`,children:`Urgent`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-2 text-xs text-slate-400 font-bold mt-1`,children:[(0,Z.jsx)(Cr,{
+size:12,className:`text-blue-500`}
+),` `,e.location]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-2`,children:[(0,Z.jsx)(_n,{
+to:`/jobs/${
+e.id}
+`,target:`_blank`,className:`p-2.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center`,title:`View Job Detail Page`,children:(0,Z.jsx)(dr,{
+size:16}
+)}
+),(0,Z.jsx)(`button`,{
+onClick:()=>N(e),className:`p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm active:scale-95`,title:`Edit Job`,children:(0,Z.jsx)(kr,{
+size:16}
+)}
+)]}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`flex flex-wrap gap-2 mb-4`,children:e.job_type&&e.job_type.split(`,`).map((e,t)=>(0,Z.jsx)(`span`,{
+className:`px-2 py-1 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-100`,children:e.trim()}
+,t))}
+),(0,Z.jsxs)(`p`,{
+className:`text-slate-500 text-sm line-clamp-2 italic mb-6`,children:[`"`,e.description,`"`]}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-3 gap-3 pt-4 border-t border-slate-50`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`p`,{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1`,children:`Vacancy`}
+),(0,Z.jsxs)(`p`,{
+className:`text-sm font-bold text-slate-700`,children:[e.vacancies_count||1,` Nos`]}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`p`,{
+className:`text-[10px] uppercase tracking-widest text-slate-400 font-black mb-1`,children:`Salary`}
+),(0,Z.jsx)(`p`,{
+className:`text-sm font-bold text-slate-700 truncate`,title:e.salary_range||`Not Specified`,children:e.salary_range||`Not Specified`}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`p`,{
+className:`text-[10px] uppercase tracking-widest font-black mb-1 ${
+t?`text-red-700`:`text-slate-400`}
+`,children:t?`Expired`:`Expires`}
+),(0,Z.jsx)(`p`,{
+className:`text-sm font-black ${
+t?`text-red-700`:`text-red-500`}
+`,children:e.expiry_date?new Date(e.expiry_date).toLocaleDateString(`en-GB`,{
+day:`2-digit`,month:`short`}
+):`N/A`}
+)]}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`px-6 py-4 bg-slate-50/50 flex items-center justify-between border-t border-slate-50`,children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-2`,children:[(0,Z.jsx)(`div`,{
+className:`w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-blue-500`,children:(0,Z.jsx)(Gr,{
+size:14}
+)}
+),(0,Z.jsxs)(`div`,{
+className:`text-[10px]`,children:[(0,Z.jsx)(`p`,{
+className:`text-slate-400 font-bold uppercase tracking-widest leading-none`,children:`Contact`}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-700 font-black truncate max-w-[100px]`,children:e.contact_person||`HR Dept`}
+)]}
+)]}
+),e.contact_phone&&(0,Z.jsxs)(`div`,{
+className:`text-[10px] text-right`,children:[(0,Z.jsx)(`p`,{
+className:`text-slate-400 font-bold uppercase tracking-widest leading-none`,children:`Phone`}
+),(0,Z.jsx)(`p`,{
+className:`text-blue-600 font-black`,children:e.contact_phone}
+)]}
+)]}
+)]}
+,e.id)}
+)}
+)}
+)]}
+),u&&(0,Z.jsx)(`div`,{
+className:`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm`,children:(0,Z.jsxs)(`div`,{
+className:`bg-white w-full max-w-lg rounded-2xl sm:rounded-[2rem] shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden`,children:[(0,Z.jsx)(`div`,{
+className:`px-6 py-4 sm:px-8 sm:py-6 border-b border-slate-100 flex-shrink-0`,children:(0,Z.jsx)(`h2`,{
+className:`text-xl sm:text-2xl font-black text-slate-900`,children:f?`Update Job Listing`:`Post New Job`}
+)}
+),(0,Z.jsxs)(`form`,{
+onSubmit:M,className:`flex flex-col flex-1 overflow-hidden min-h-0`,children:[(0,Z.jsxs)(`div`,{
+className:`p-6 sm:p-8 overflow-y-auto flex-1 space-y-6`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Job Title`}
+),(0,Z.jsx)(`input`,{
+type:`text`,required:!0,placeholder:`e.g. Delivery Executive`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.title,onChange:e=>h({
+...m,title:e.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Description`}
+),(0,Z.jsx)(`textarea`,{
+required:!0,rows:`3`,placeholder:`Job requirements, timings, etc...`,className:`w-full p-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.description,onChange:e=>h({
+...m,description:e.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 sm:grid-cols-2 gap-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Vacancies`}
+),(0,Z.jsx)(`input`,{
+type:`number`,min:`1`,required:!0,className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.vacancies_count,onChange:e=>h({
+...m,vacancies_count:parseInt(e.target.value)}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Expiry Date`}
+),(0,Z.jsx)(`input`,{
+type:`date`,required:!0,min:N_(),className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.expiry_date,onChange:e=>{
+let t=e.target.value;
+t&&t<N_()?(_({
+type:`error`,text:`Expiry date cannot be in the past.`}
+),h({
+...m,expiry_date:``}
+)):(_(``),h({
+...m,expiry_date:t}
+))}
+}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 sm:grid-cols-2 gap-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Contact Person`}
+),(0,Z.jsx)(`input`,{
+type:`text`,required:!0,placeholder:`Name`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.contact_person,onChange:e=>h({
+...m,contact_person:e.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Contact Phone`}
+),(0,Z.jsx)(`input`,{
+type:`text`,placeholder:`Optional`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.contact_phone,onChange:e=>h({
+...m,contact_phone:e.target.value}
+)}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 sm:grid-cols-2 gap-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Region / District`}
+),(0,Z.jsxs)(`select`,{
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:O,onChange:e=>{
+let t=e.target.value;
+h(e=>({
+...e,location:t}
+))}
+,children:[(0,Z.jsx)(`option`,{
+value:``,children:`Select Region / District`}
+),C.filter(e=>!e.parent_id).map(e=>(0,Z.jsx)(`option`,{
+value:e.name,children:e.name}
+,e.id))]}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Area / Sub-place`}
+),(0,Z.jsxs)(`select`,{
+className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60 disabled:bg-slate-50/50 disabled:cursor-not-allowed`,value:k,disabled:!O,onChange:e=>{
+let t=e.target.value;
+h(e=>({
+...e,location:t||O}
+))}
+,children:[(0,Z.jsx)(`option`,{
+value:``,children:O?`Select Area / Sub-place`:`Select Region First`}
+),j.map(e=>(0,Z.jsx)(`option`,{
+value:e.name,children:e.name}
+,e.id))]}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Salary Range`}
+),(0,Z.jsx)(`input`,{
+type:`text`,placeholder:`e.g. ₹15,000 - ₹20,000`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100`,value:m.salary_range,onChange:e=>h({
+...m,salary_range:e.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-2`,children:`Job Types (Select all that apply)`}
+),(0,Z.jsx)(`div`,{
+className:`flex flex-wrap gap-3`,children:[`Full-time`,`Part-time`,`Daily Wages`,`Contract`].map(e=>(0,Z.jsxs)(`label`,{
+className:`flex items-center gap-2 cursor-pointer p-2 px-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors`,children:[(0,Z.jsx)(`input`,{
+type:`checkbox`,checked:m.job_type&&m.job_type.split(`,`).map(e=>e.trim()).includes(e),onChange:()=>{
+let t=m.job_type?m.job_type.split(`,`).map(e=>e.trim()).filter(Boolean):[];
+t.includes(e)?t=t.filter(t=>t!==e):t.push(e),h({
+...m,job_type:t.join(`, `)}
+)}
+,className:`w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500`}
+),(0,Z.jsx)(`span`,{
+className:`text-sm font-medium text-slate-700`,children:e}
+)]}
+,e))}
+)]}
+),(0,Z.jsx)(`div`,{
+children:(0,Z.jsxs)(`label`,{
+className:`flex items-center gap-3 p-4 rounded-xl border border-orange-100 bg-orange-50/30 cursor-pointer hover:bg-orange-50 transition-colors`,children:[(0,Z.jsx)(`input`,{
+type:`checkbox`,checked:m.is_urgent,onChange:e=>h({
+...m,is_urgent:e.target.checked}
+),className:`w-5 h-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500`}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`span`,{
+className:`block text-sm font-bold text-orange-700`,children:`Urgent Requirement`}
+),(0,Z.jsx)(`span`,{
+className:`block text-[10px] text-orange-600 font-medium`,children:`Highlight this job with an urgent badge.`}
+)]}
+)]}
+)}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Listing Status`}
+),(0,Z.jsxs)(`div`,{
+className:`flex gap-4`,children:[(0,Z.jsxs)(`label`,{
+className:`flex items-center gap-2 cursor-pointer`,children:[(0,Z.jsx)(`input`,{
+type:`radio`,name:`status`,value:`active`,checked:m.status===`active`,onChange:e=>h({
+...m,status:e.target.value}
+),className:`w-4 h-4 text-blue-600`}
+),(0,Z.jsx)(`span`,{
+className:`text-sm`,children:`Active`}
+)]}
+),(0,Z.jsxs)(`label`,{
+className:`flex items-center gap-2 cursor-pointer`,children:[(0,Z.jsx)(`input`,{
+type:`radio`,name:`status`,value:`inactive`,checked:m.status===`inactive`,onChange:e=>h({
+...m,status:e.target.value}
+),className:`w-4 h-4 text-blue-600`}
+),(0,Z.jsx)(`span`,{
+className:`text-sm`,children:`Inactive`}
+)]}
+)]}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`px-6 py-4 sm:px-8 sm:py-6 border-t border-slate-100 bg-slate-50/50 flex-shrink-0 space-y-4`,children:[g&&(0,Z.jsx)(`div`,{
+className:`p-4 rounded-xl text-sm ${
+g.type===`error`?`bg-red-50 text-red-600 border border-red-100`:`bg-green-50 text-green-600 border border-green-100`}
+`,children:g.text}
+),(0,Z.jsxs)(`div`,{
+className:`flex gap-3`,children:[(0,Z.jsx)(`button`,{
+type:`button`,onClick:()=>{
+d(!1),p(null),_(``)}
+,className:`flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-colors border border-slate-200`,children:`Cancel`}
+),(0,Z.jsx)(`button`,{
+type:`submit`,className:`flex-1 h-12 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200`,children:f?`Update Listing`:`Post Job`}
+)]}
+)]}
+)]}
+)]}
+)}
+)]}
+)}
+,F_=()=>{
+let[e,t]=(0,v.useState)({
+name:``,company_name:``,email:``,phone:``,address:``,google_map_link:``,gst_number:``}
+),[n,r]=(0,v.useState)({
+current:``,new:``,confirm:``}
+),[i,a]=(0,v.useState)(``),[o,s]=(0,v.useState)(``),[c,l]=(0,v.useState)(!1),[u,d]=(0,v.useState)(!1),[f,p]=(0,v.useState)(``),[m,h]=(0,v.useState)(``),[g,_]=(0,v.useState)(``),[y,b]=(0,v.useState)(!1),[x,S]=(0,v.useState)(!1),[C,w]=(0,v.useState)(!1),[T,E]=(0,v.useState)(null),[D,O]=(0,v.useState)(!1),[k,A]=(0,v.useState)(``),[j,M]=(0,v.useState)(``),[N,P]=(0,v.useState)({
+gst_domains:``,trade_license_domains:``}
+),F=localStorage.getItem(`user_id`);
+(0,v.useEffect)(()=>{
+(async()=>{
+try{
+P((await X.get(`/api/settings`)).data||{
+}
+)}
+catch(e){
+console.error(`Error fetching site settings`,e)}
+}
+)()}
+,[]);
+let I=e=>{
+if(!e||e.trim()===``)return!0;
+let t=window.location.href,n=e.split(`,`).map(e=>e.trim().toLowerCase()).filter(Boolean),r=window.location.origin.toLowerCase(),i=window.location.host.toLowerCase(),a=window.location.hostname.toLowerCase();
+return n.some(e=>t.toLowerCase().includes(e)||e.includes(r)||e.includes(i)||e.includes(a))}
+;
+return(0,v.useEffect)(()=>{
+F&&(async()=>{
+try{
+let e=await X.get(`/api/users/${
+F}
+`);
+t({
+name:e.data.name||``,company_name:e.data.company_name||``,email:e.data.email||``,phone:(e.data.phone||``).replace(/^\+/,``),address:e.data.address||``,google_map_link:e.data.google_map_link||``,gst_number:e.data.gst_number||``}
+),l(!!e.data.is_verified),d(!!e.data.is_gst_verified),p(e.data.gst_number||``),h(e.data.company_name||``),M(e.data.license_image_url||``)}
+catch(e){
+console.error(`Error fetching profile`,e)}
+}
+)()}
+,[F]),(0,Z.jsxs)(`div`,{
+className:`max-w-4xl mx-auto px-4 py-8 space-y-8 pb-20`,children:[(0,Z.jsx)(`div`,{
+className:`bg-slate-900 rounded-3xl p-8 text-white shadow-lg`,children:(0,Z.jsxs)(`div`,{
+className:`flex flex-col md:flex-row justify-between items-start md:items-center gap-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-widest mb-1`,children:[(0,Z.jsx)(Lr,{
+size:14}
+),`Account Management`]}
+),(0,Z.jsx)(`h1`,{
+className:`text-3xl font-extrabold`,children:`Employer Settings`}
+),(0,Z.jsx)(`p`,{
+className:`text-slate-400 mt-2`,children:`Manage your account credentials and preferences.`}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`flex flex-col items-end gap-2`,children:[(0,Z.jsxs)(`div`,{
+className:`px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 ${
+u?`bg-blue-500/20 text-blue-400 border border-blue-500/30`:c?`bg-green-500/20 text-green-400 border border-green-500/30`:`bg-orange-500/20 text-orange-400 border border-orange-500/30`}
+`,children:[u?(0,Z.jsx)(`div`,{
+className:`w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]`}
+):c?(0,Z.jsx)(`div`,{
+className:`w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]`}
+):(0,Z.jsx)(`div`,{
+className:`w-2 h-2 rounded-full bg-orange-500 animate-pulse`}
+),u?`GST Verified`:c?`Verified by Admin`:`Not Verified`]}
+),!c&&(0,Z.jsx)(`p`,{
+className:`text-[10px] text-slate-400 font-medium italic`,children:`Visible to public once verified.`}
+)]}
+)]}
+)}
+),(0,Z.jsxs)(`div`,{
+className:`bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-fit`,children:[(0,Z.jsxs)(`div`,{
+className:`p-6 border-b border-slate-100 bg-slate-50/50`,children:[(0,Z.jsxs)(`h2`,{
+className:`font-bold text-slate-800 flex items-center gap-2`,children:[(0,Z.jsx)(Gr,{
+size:18,className:`text-blue-600`}
+),`Profile Details`]}
+),(0,Z.jsx)(`p`,{
+className:`text-xs text-slate-500 mt-1`,children:`Update your personal and company contact information.`}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`p-6`,children:(0,Z.jsxs)(`form`,{
+onSubmit:async n=>{
+n.preventDefault();
+try{
+let n=await X.put(`/api/users/${
+F}
+`,{
+...e,phone:`+`+e.phone.replace(/\D/g,``)}
+);
+localStorage.setItem(`name`,e.name);
+let r=`Profile updated successfully.`;
+n.data.clearedGst?(t(e=>({
+...e,gst_number:``}
+)),p(``),l(!1),d(!1),h(e.company_name),r=`Profile updated. Business name was changed: GST verified state and GST number cleared. Please re-enter and verify the GST for the new Business Name.`):(p(e.gst_number),h(e.company_name),n.data.resetVerification&&(l(!1),d(!1))),s({
+type:`success`,text:r}
+),window.dispatchEvent(new Event(`storage`))}
+catch(e){
+s({
+type:`error`,text:e.response?.data?.error||`Failed to update profile`}
+)}
+}
+,className:`space-y-4`,children:[(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 md:grid-cols-2 gap-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Full Name`}
+),(0,Z.jsx)(`input`,{
+type:`text`,required:!0,className:`w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none`,value:e.name,onChange:n=>t({
+...e,name:n.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Business Name`}
+),(0,Z.jsx)(`input`,{
+type:`text`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none`,value:e.company_name,onChange:n=>t({
+...e,company_name:n.target.value}
+)}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`grid grid-cols-1 md:grid-cols-2 gap-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Email Address`}
+),(0,Z.jsx)(`input`,{
+type:`email`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none`,value:e.email,onChange:n=>t({
+...e,email:n.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Mobile Number`}
+),(0,Z.jsxs)(`div`,{
+className:`relative flex items-center`,children:[(0,Z.jsx)(`div`,{
+className:`absolute left-4 text-slate-500 font-bold select-none text-base`,children:`+`}
+),(0,Z.jsx)(`input`,{
+type:`tel`,className:`w-full h-12 pl-9 pr-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none font-bold text-slate-700`,value:e.phone,onChange:n=>t({
+...e,phone:n.target.value.replace(/\D/g,``)}
+)}
+)]}
+)]}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Office/Shop Address`}
+),(0,Z.jsx)(`textarea`,{
+rows:`3`,className:`w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none h-28`,value:e.address,onChange:n=>t({
+...e,address:n.target.value}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`Google Maps Link`}
+),(0,Z.jsx)(`input`,{
+type:`url`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none`,value:e.google_map_link,onChange:n=>t({
+...e,google_map_link:n.target.value}
+)}
+)]}
+),o&&(0,Z.jsx)(`div`,{
+className:`p-4 rounded-xl text-sm ${
+o.type===`error`?`bg-red-50 text-red-600`:`bg-green-50 text-green-600`}
+`,children:o.text}
+),(0,Z.jsxs)(`button`,{
+type:`submit`,className:`w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all mt-4 shadow-lg shadow-blue-200`,children:[`Save Profile`,(0,Z.jsx)(Nr,{
+size:18}
+)]}
+)]}
+)}
+)]}
+),I(N.gst_domains)&&(0,Z.jsxs)(`div`,{
+className:`bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-fit`,children:[(0,Z.jsxs)(`div`,{
+className:`p-6 border-b border-slate-100 bg-slate-50/50`,children:[(0,Z.jsxs)(`h2`,{
+className:`font-bold text-slate-800 flex items-center gap-2`,children:[(0,Z.jsx)(Jn,{
+size:18,className:`text-blue-600`}
+),`GST Verification`]}
+),(0,Z.jsx)(`p`,{
+className:`text-xs text-slate-500 mt-1`,children:`Verify your GST number to get a verified badge on your employer profile.`}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`p-6`,children:(0,Z.jsxs)(`div`,{
+className:`space-y-4`,children:[(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-1`,children:`GST Number`}
+),(0,Z.jsxs)(`div`,{
+className:`flex flex-col sm:flex-row gap-3`,children:[(0,Z.jsx)(`input`,{
+type:`text`,className:`w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none uppercase`,placeholder:`e.g. 29ABCDE1234F2Z5`,value:e.gst_number||``,onChange:n=>t({
+...e,gst_number:n.target.value}
+)}
+),!u||e.gst_number!==f?(0,Z.jsx)(`button`,{
+type:`button`,onClick:async()=>{
+if(!e.gst_number){
+_({
+type:`error`,text:`Please enter a GST number first`}
+);
+return}
+try{
+await X.put(`/api/users/${
+F}
+/verify-gst`,{
+gst_number:e.gst_number}
+),d(!0),l(!0),p(e.gst_number),_({
+type:`success`,text:`GST Number verified successfully`}
+)}
+catch(e){
+_({
+type:`error`,text:e.response?.data?.error||`Failed to verify GST`}
+)}
+}
+,className:`h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors whitespace-nowrap`,children:`Verify GST`}
+):(0,Z.jsx)(`div`,{
+className:`flex items-center justify-center px-6 h-12 bg-green-50 text-green-600 font-bold rounded-xl border border-green-200 whitespace-nowrap`,children:`Verified ✓`}
+)]}
+)]}
+),g&&(0,Z.jsx)(`div`,{
+className:`p-4 rounded-xl text-sm ${
+g.type===`error`?`bg-red-50 text-red-600`:`bg-green-50 text-green-600`}
+`,children:g.text}
+)]}
+)}
+)]}
+),I(N.trade_license_domains)&&(0,Z.jsxs)(`div`,{
+className:`bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-fit`,children:[(0,Z.jsxs)(`div`,{
+className:`p-6 border-b border-slate-100 bg-slate-50/50`,children:[(0,Z.jsxs)(`h2`,{
+className:`font-bold text-slate-800 flex items-center gap-2`,children:[(0,Z.jsx)(Jn,{
+size:18,className:`text-blue-600`}
+),`Business License`]}
+),(0,Z.jsx)(`p`,{
+className:`text-xs text-slate-500 mt-1`,children:`Upload your business license or registration certificate as an image. An admin will manually verify your profile.`}
+)]}
+),(0,Z.jsx)(`div`,{
+className:`p-6`,children:(0,Z.jsxs)(`div`,{
+className:`space-y-4`,children:[j&&(0,Z.jsxs)(`div`,{
+className:`border border-slate-200 rounded-2xl p-4 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4`,children:[(0,Z.jsxs)(`div`,{
+className:`flex items-center gap-4`,children:[(0,Z.jsx)(`img`,{
+src:j,alt:`Business License`,className:`w-16 h-16 rounded-xl object-cover border border-slate-200 shadow-sm`}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`div`,{
+className:`text-sm font-bold text-slate-800`,children:`Uploaded License Image`}
+),(0,Z.jsxs)(`div`,{
+className:`text-xs text-slate-400 mt-1`,children:[`Status: `,c&&!u?(0,Z.jsx)(`span`,{
+className:`text-green-600 font-bold`,children:`Verified by Admin ✓`}
+):(0,Z.jsx)(`span`,{
+className:`text-orange-500 font-bold`,children:`Pending Admin Review`}
+)]}
+)]}
+)]}
+),(0,Z.jsx)(`a`,{
+href:j,target:`_blank`,rel:`noreferrer`,className:`px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-600 transition-colors`,children:`View Full Size`}
+)]}
+),(0,Z.jsxs)(`div`,{
+children:[(0,Z.jsx)(`label`,{
+className:`block text-sm font-semibold text-slate-700 mb-2`,children:j?`Replace Business License (Image)`:`Upload Business License (Image)`}
+),(0,Z.jsxs)(`div`,{
+className:`flex flex-col sm:flex-row gap-3`,children:[(0,Z.jsx)(`input`,{
+type:`file`,accept:`image/*`,onChange:e=>{
+e.target.files&&e.target.files[0]&&E(e.target.files[0])}
+,className:`w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-600 file:uppercase file:tracking-wider hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-xl p-1`}
+),T&&(0,Z.jsx)(`button`,{
+type:`button`,onClick:async()=>{
+if(!T)return;
+O(!0),A(``);
+let e=new FormData;
+e.append(`license_image`,T);
+try{
+M((await X.post(`/api/employers/${
+F}
+/upload-license-image`,e,{
+headers:{
+"Content-Type":`multipart/form-data`}
+}
+)).data.imageUrl),l(!1),A({
+type:`success`,text:`License document uploaded successfully! Pending Admin verification.`}
+),E(null)}
+catch(e){
+console.error(e),A({
+type:`error`,text:e.response?.data?.error||`Failed to upload license document.`}
+)}
+finally{
+O(!1)}
+}
+,disabled:D,className:`h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors whitespace-nowrap disabled:opacity-50`,children:D?`Uploading...`:`Upload Image`}
+)]}
+)]}
+),k&&(0,Z.jsx)(`div`,{
+className:`p-4 rounded-xl text-sm ${
+k.type===`error`?`bg-red-50 text-red-600`:`bg-green-50 text-green-600`}
+`,children:k.text}
+)]}
+)}
+)]}
+),(0,Z.jsxs)(`div`,{
+className:`bg-white rounded-3xl border border-slate-200 
