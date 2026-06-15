@@ -123,7 +123,13 @@ const JobList = () => {
     const fetchJobs = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/jobs', { params: Object.fromEntries(searchParams) });
+        const role = localStorage.getItem('role');
+        const userId = localStorage.getItem('user_id');
+        const apiParams = Object.fromEntries(searchParams);
+        if (role === 'candidate' && userId) {
+          apiParams.candidate_id = userId;
+        }
+        const response = await axios.get('/api/jobs', { params: apiParams });
         setJobs(response.data.jobs || []);
         setTotalPages(response.data.totalPages || 1);
         setTotal(response.data.total || 0);
@@ -192,7 +198,12 @@ const JobList = () => {
   const downloadPDF = async () => {
     setIsDownloading(true);
     try {
+      const role = localStorage.getItem('role');
+      const userId = localStorage.getItem('user_id');
       const params = { ...Object.fromEntries(searchParams), limit: 1000, page: 1 };
+      if (role === 'candidate' && userId) {
+        params.candidate_id = userId;
+      }
       const res = await axios.get('/api/jobs', { params });
       const allJobs = res.data.jobs || [];
 

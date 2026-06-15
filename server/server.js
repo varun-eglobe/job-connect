@@ -127,10 +127,19 @@ app.get('/api/jobs', async (req, res) => {
 
         if (!employer_id) {
             const today = new Date().toISOString().split('T')[0];
-            query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
-            countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
-            params.push(today);
-            countParams.push(today);
+            const candidate_id = req.query.candidate_id;
+            
+            if (candidate_id) {
+                query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
+                countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
+                params.push(today, candidate_id);
+                countParams.push(today, candidate_id);
+            } else {
+                query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
+                countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
+                params.push(today);
+                countParams.push(today);
+            }
         }
 
         if (location) {
