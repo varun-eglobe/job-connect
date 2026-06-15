@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, User, Lock, ArrowRight, Eye, EyeOff, Shield, Users, Key, X, HelpCircle, Briefcase } from 'lucide-react';
@@ -12,6 +12,18 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const otpInputRef = useRef(null);
+
+  useEffect(() => {
+    if (step === 2) {
+      const timer = setTimeout(() => {
+        if (otpInputRef.current) {
+          otpInputRef.current.focus();
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
 
   const [debugAccounts, setDebugAccounts] = useState([]);
   const [showDebugModal, setShowDebugModal] = useState(false);
@@ -119,8 +131,8 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto py-20">
-      <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm">
+    <div className="max-w-md mx-auto py-10 sm:py-20 px-4 sm:px-0">
+      <div className="bg-transparent sm:bg-white p-6 sm:p-10 rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 shadow-none sm:shadow-sm">
         <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-6">
           <LogIn size={32} />
         </div>
@@ -193,6 +205,7 @@ const Login = () => {
             <div className="space-y-1">
               <label className="text-sm font-bold text-slate-700 ml-1">Verification Code</label>
               <input 
+                ref={otpInputRef}
                 type="text" 
                 required
                 maxLength={4}

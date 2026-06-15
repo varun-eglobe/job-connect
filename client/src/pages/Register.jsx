@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Building2, ArrowRight, Eye, EyeOff } from 'lucide-react';
@@ -13,7 +13,8 @@ const Register = () => {
     company_name: '',
     address: '',
     google_map_link: '',
-    gst_number: ''
+    gst_number: '',
+    dob: ''
   });
   const [step, setStep] = useState(1); // 1: Input form, 2: OTP verification
   const [transactionToken, setTransactionToken] = useState('');
@@ -22,6 +23,18 @@ const Register = () => {
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const otpInputRef = useRef(null);
+
+  useEffect(() => {
+    if (step === 2) {
+      const timer = setTimeout(() => {
+        if (otpInputRef.current) {
+          otpInputRef.current.focus();
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
   const [termsSlug, setTermsSlug] = useState('terms-and-conditions');
 
   useEffect(() => {
@@ -104,8 +117,8 @@ const Register = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto py-10">
-      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+    <div className="max-w-md mx-auto py-5 sm:py-10 px-4 sm:px-0">
+      <div className="bg-transparent sm:bg-white p-6 sm:p-8 rounded-none sm:rounded-3xl border-0 sm:border border-slate-200 shadow-none sm:shadow-sm">
         <h2 className="text-2xl font-bold text-slate-800 mb-2">Create Account</h2>
         <p className="text-slate-500 mb-8 text-sm italic">Connect with opportunities.</p>
 
@@ -164,6 +177,19 @@ const Register = () => {
                   />
                 </div>
               </div>
+
+              {role === 'candidate' && (
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    required
+                    className="w-full h-14 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none text-slate-700 font-medium"
+                    value={formData.dob || ''}
+                    onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Password</label>
@@ -243,6 +269,7 @@ const Register = () => {
             <div className="space-y-1">
               <label className="text-sm font-bold text-slate-700 ml-1">Verification Code</label>
               <input 
+                ref={otpInputRef}
                 type="text" 
                 required
                 maxLength={4}

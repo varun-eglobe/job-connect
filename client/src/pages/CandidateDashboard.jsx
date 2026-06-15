@@ -119,8 +119,12 @@ const CandidateDashboard = () => {
                       Applied {new Date(app.applied_at).toLocaleDateString('en-GB')}
                     </span>
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 hover:text-blue-600 transition-colors">
-                    <Link to={`/jobs/${app.job_id}`}>{app.job_title}</Link>
+                  <h3 className="text-xl font-black text-slate-900 transition-colors">
+                    {app.is_deleted_by_admin === 1 ? (
+                      <span>{app.job_title}</span>
+                    ) : (
+                      <Link to={`/jobs/${app.job_id}`} className="hover:text-blue-600">{app.job_title}</Link>
+                    )}
                   </h3>
                   <div className="text-sm font-bold text-slate-500 mt-0.5">{app.company_name}</div>
                 </div>
@@ -130,6 +134,13 @@ const CandidateDashboard = () => {
                   <div className="text-xl font-black text-blue-600 mt-1">#{app.token_number || 'N/A'}</div>
                 </div>
               </div>
+
+              {app.is_deleted_by_admin === 1 && (
+                <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-start gap-3 text-sm text-red-800 font-bold leading-normal">
+                  <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
+                  <span>Sorry, this {app.company_name || 'Employer'} has been removed by admin.</span>
+                </div>
+              )}
 
               {/* Body details */}
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -187,21 +198,32 @@ const CandidateDashboard = () => {
                   </div>
 
                   <div className="flex pt-2">
-                    <Link 
-                      to={`/jobs/${app.job_id}`}
-                      className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black transition-colors"
-                    >
-                      <ExternalLink size={14} /> View Job
-                    </Link>
+                    {app.is_deleted_by_admin === 1 ? (
+                      <button 
+                        disabled
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-bold uppercase tracking-wider cursor-not-allowed border border-slate-200"
+                      >
+                        Job Unavailable
+                      </button>
+                    ) : (
+                      <Link 
+                        to={`/jobs/${app.job_id}`}
+                        className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black transition-colors"
+                      >
+                        <ExternalLink size={14} /> View Job
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Warning strip */}
-              <div className="bg-amber-50/50 border-t border-slate-100 px-6 py-3.5 flex items-start gap-2 text-[10px] text-amber-800 font-semibold leading-relaxed">
-                <AlertCircle size={14} className="text-amber-600 shrink-0 mt-0.5" />
-                <span>Show this application page or quote Token #{app.token_number} at the counter upon arrival for your interview.</span>
-              </div>
+              {app.is_deleted_by_admin !== 1 && (
+                <div className="bg-amber-50/50 border-t border-slate-100 px-6 py-3.5 flex items-start gap-2 text-[10px] text-amber-800 font-semibold leading-relaxed">
+                  <AlertCircle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                  <span>Show this application page or quote Token #{app.token_number} at the counter upon arrival for your interview.</span>
+                </div>
+              )}
             </div>
           ))}
         </div>

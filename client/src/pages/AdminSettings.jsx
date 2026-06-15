@@ -92,7 +92,11 @@ const AdminSettings = () => {
         powered_logo_url: '',
         gst_domains: '',
         trade_license_domains: '',
-        interview_rules: ''
+        interview_rules: '',
+        twilio_sid: '',
+        twilio_auth_token: '',
+        twilio_phone_number: '',
+        twilio_enabled: 0
     });
     const [pages, setPages] = useState([]);
     const [editingPage, setEditingPage] = useState(null);
@@ -144,6 +148,7 @@ const AdminSettings = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [showNewUserPassword, setShowNewUserPassword] = useState(false);
+    const [showTwilioToken, setShowTwilioToken] = useState(false);
     const [testimonials, setTestimonials] = useState([]);
     const [newTestimonial, setNewTestimonial] = useState({ name: '', designation: '', message: '', image_url: '' });
     const [showTestimonialModal, setShowTestimonialModal] = useState(false);
@@ -504,6 +509,7 @@ const AdminSettings = () => {
         { id: 'locations', label: 'Locations Master', icon: MapPin, permission: 'manage_locations' },
         { id: 'homepage', label: 'Home Page CMS', icon: Globe, permission: 'manage_homepage' },
         { id: 'branding', label: 'App Branding', icon: Layout, permission: 'manage_branding' },
+        { id: 'sms', label: 'SMS Configuration', icon: Mail, permission: 'manage_branding' },
         { id: 'interview_rules', label: 'Interview Rules', icon: FileText, permission: 'manage_branding' },
         { id: 'domains', label: 'Domain Rules', icon: ShieldCheck, permission: 'manage_branding' },
         { id: 'support', label: 'Support Directory', icon: HelpCircle, permission: 'manage_support' },
@@ -1455,6 +1461,93 @@ const AdminSettings = () => {
                                     <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100">
                                         <h4 className="font-bold text-blue-800 text-sm flex items-center gap-2 mb-2"><HelpCircle size={16} /> How to add to home screen?</h4>
                                         <p className="text-xs text-blue-600 leading-relaxed">On iPhone (Safari), tap the <strong>'Share'</strong> icon and choose <strong>'Add to Home Screen'</strong>. On Android (Chrome), tap the three dots and select <strong>'Add to Home Screen'</strong> or <strong>'Install App'</strong>.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'sms' && can('manage_branding') && (
+                            <div className="animate-in fade-in duration-500 font-sans">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-800">SMS Gateway Configuration</h2>
+                                        <p className="text-sm text-slate-500">Configure Twilio credentials and toggle live SMS OTP delivery.</p>
+                                    </div>
+                                    <button onClick={handleSaveSettings} className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all">
+                                        <Save size={18} /> Save Config
+                                    </button>
+                                </div>
+                                <div className="p-8 space-y-8">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-2">
+                                            <Mail size={18} className="text-blue-600" />
+                                            <h3 className="font-black text-slate-800 uppercase tracking-wider text-sm">Twilio Settings</h3>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="sr-only peer" 
+                                                    checked={!!settings.twilio_enabled}
+                                                    onChange={(e) => setSettings({...settings, twilio_enabled: e.target.checked ? 1 : 0})}
+                                                />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                <span className="ml-2 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                                                    {settings.twilio_enabled ? 'Enabled' : 'Disabled'}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Twilio Account SID</label>
+                                                <input 
+                                                    className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" 
+                                                    value={settings.twilio_sid || ''} 
+                                                    onChange={(e) => setSettings({...settings, twilio_sid: e.target.value})} 
+                                                    placeholder="ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" 
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Twilio Sender Phone Number</label>
+                                                <input 
+                                                    className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" 
+                                                    value={settings.twilio_phone_number || ''} 
+                                                    onChange={(e) => setSettings({...settings, twilio_phone_number: e.target.value})} 
+                                                    placeholder="e.g. +1234567890" 
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Twilio Auth Token</label>
+                                                <div className="relative">
+                                                    <input 
+                                                        type={showTwilioToken ? 'text' : 'password'}
+                                                        className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" 
+                                                        value={settings.twilio_auth_token || ''} 
+                                                        onChange={(e) => setSettings({...settings, twilio_auth_token: e.target.value})} 
+                                                        placeholder="Enter Auth Token" 
+                                                    />
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setShowTwilioToken(!showTwilioToken)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                                    >
+                                                        {showTwilioToken ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl h-24 flex items-center gap-3">
+                                                <HelpCircle size={20} className="text-slate-400 shrink-0" />
+                                                <p className="text-[10px] text-slate-500 leading-relaxed">
+                                                    Once configured and toggled to <strong>Enabled</strong>, all verification codes generated for candidate registration, login, phone changes, and resets will be delivered as real SMS messages to the user's mobile. If disabled, the portal will fall back to using <strong>9999</strong> for local/dev verification.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

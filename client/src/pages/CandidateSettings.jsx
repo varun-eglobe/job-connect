@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Settings, Lock, ArrowRight, User, Save, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 const CandidateSettings = () => {
-  const [profile, setProfile] = useState({ name: '', phone: '', email: '' });
+  const [profile, setProfile] = useState({ name: '', phone: '', email: '', dob: '' });
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [message, setMessage] = useState('');
   const [profileMessage, setProfileMessage] = useState('');
@@ -13,6 +13,19 @@ const CandidateSettings = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const userId = localStorage.getItem('user_id');
+
+  const getAgeString = () => {
+    if (!profile.dob) return '';
+    const dob = new Date(profile.dob);
+    if (isNaN(dob.getTime())) return '';
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return ` (Age: ${age})`;
+  };
 
   const [originalPhone, setOriginalPhone] = useState('');
   const [phoneVerified, setPhoneVerified] = useState(false);
@@ -27,10 +40,25 @@ const CandidateSettings = () => {
       try {
         const response = await axios.get(`/api/users/${userId}`);
         const formattedPhone = (response.data.phone || '').replace(/^\+/, '');
+        let formattedDob = '';
+        if (response.data.dob) {
+          if (typeof response.data.dob === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(response.data.dob)) {
+            formattedDob = response.data.dob;
+          } else {
+            const d = new Date(response.data.dob);
+            if (!isNaN(d.getTime())) {
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const day = String(d.getDate()).padStart(2, '0');
+              formattedDob = `${year}-${month}-${day}`;
+            }
+          }
+        }
         setProfile({
           name: response.data.name || '',
           phone: formattedPhone,
-          email: response.data.email || ''
+          email: response.data.email || '',
+          dob: formattedDob
         });
         setOriginalPhone(formattedPhone);
       } catch (err) {
@@ -165,6 +193,17 @@ const CandidateSettings = () => {
                     onChange={(e) => setProfile({...profile, name: e.target.value})}
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Date of Birth{getAgeString()}</label>
+                  <input
+                    type="date"
+                    required
+                    className="w-full h-12 px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none text-slate-700 font-medium"
+                    value={profile.dob}
+                    onChange={(e) => setProfile({...profile, dob: e.target.value})}
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Mobile Number</label>
                   <div className="relative flex items-center">

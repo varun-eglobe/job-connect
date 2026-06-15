@@ -485,12 +485,12 @@ const JobList = () => {
                 <button
                   type="button"
                   onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                  className="w-full h-14 px-5 pr-12 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-slate-700 font-semibold flex items-center justify-between shadow-sm text-left select-none"
+                  className="w-full h-14 px-5 pr-12 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all text-slate-700 font-semibold flex items-center justify-between shadow-sm text-left select-none relative"
                 >
                   <span className="truncate">
                     {activeTypes.length === 0 ? "All Job Types" : activeTypes.join(', ')}
                   </span>
-                  <ChevronDown size={18} className={`text-slate-400 transition-transform ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={18} className={`absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-transform ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isTypeDropdownOpen && (
@@ -678,10 +678,8 @@ const JobList = () => {
                     </div>
                     <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400 font-semibold mb-3">
                       {job.job_post_id && <span>ID: {job.job_post_id}</span>}
-                      {(job.job_post_id && (job.qualification || job.age_range)) && <span className="text-slate-200 font-light">|</span>}
+                      {(job.job_post_id && job.qualification) && <span className="text-slate-200 font-light">|</span>}
                       {job.qualification && <span>Qualification: <span className="text-slate-700 font-bold">{job.qualification}</span></span>}
-                      {(job.qualification && job.age_range) && <span className="text-slate-200 font-light">|</span>}
-                      {job.age_range && <span>Age: <span className="text-slate-700 font-bold">{job.age_range}</span></span>}
                     </div>
                   </div>
 
@@ -703,7 +701,11 @@ const JobList = () => {
                   <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">{job.description}</p>
 
                   {/* Requirements Grid */}
-                  <div className={`grid grid-cols-2 ${job.is_token_based ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-4`}>
+                  <div className={`grid grid-cols-2 ${
+                    job.is_token_based && job.age_range ? 'sm:grid-cols-5' : 
+                    job.is_token_based || job.age_range ? 'sm:grid-cols-4' : 
+                    'sm:grid-cols-3'
+                  } gap-4`}>
                     <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3 transition-colors duration-200">
                       <div className="flex items-center gap-1 mb-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -718,6 +720,15 @@ const JobList = () => {
                       </div>
                       <p className="text-sm font-black text-emerald-600 truncate" title={job.salary_range || 'Not Disclosed'}>{job.salary_range || 'Not Disclosed'}</p>
                     </div>
+                    {job.age_range && (
+                      <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3 transition-colors duration-200">
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                          <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Age Limit</span>
+                        </div>
+                        <p className="text-sm font-black text-slate-800">{job.age_range}</p>
+                      </div>
+                    )}
                     <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3 transition-colors duration-200">
                       <div className="flex items-center gap-1 mb-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>

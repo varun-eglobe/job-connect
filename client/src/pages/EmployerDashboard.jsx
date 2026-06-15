@@ -795,10 +795,10 @@ const EmployerDashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Age Range Requirement</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Age Range (Optional)</label>
                     <input
                       type="text"
-                      placeholder="e.g. 18 - 35, Above 21, or Any"
+                      placeholder="e.g. 18 - 35"
                       className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
                       value={formData.age_range || ''}
                       onChange={(e) => setFormData({...formData, age_range: e.target.value})}
