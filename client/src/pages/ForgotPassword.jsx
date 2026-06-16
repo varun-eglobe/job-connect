@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
-import { Key, User, Building2, Lock, ArrowRight, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Key, User, Building2, Lock, ArrowRight, Eye, EyeOff, CheckCircle, ShieldCheck, Mail } from 'lucide-react';
 
 const ForgotPassword = () => {
   const [role, setRole] = useState('candidate');
@@ -19,7 +19,16 @@ const ForgotPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const navigate = useNavigate();
+  const { search } = useLocation();
   const otpInputRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const r = params.get('role');
+    if (r === 'admin' || r === 'candidate' || r === 'employer') {
+      setRole(r);
+    }
+  }, [search]);
 
   useEffect(() => {
     if (step === 2) {
@@ -32,15 +41,33 @@ const ForgotPassword = () => {
     }
   }, [step]);
 
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setSettings(res.data);
+      } catch (err) {
+        console.error("Failed to load settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   // Redirect to login after 3 seconds on success
   useEffect(() => {
     if (step === 3) {
       const timer = setTimeout(() => {
-        navigate('/login');
+        if (role === 'admin') {
+          navigate('/admin-login');
+        } else {
+          navigate('/login');
+        }
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [step, navigate]);
+  }, [step, navigate, role]);
 
   const handleIdentifierSubmit = async (e) => {
     e.preventDefault();
@@ -49,9 +76,18 @@ const ForgotPassword = () => {
     setIsSuccess(false);
 
     try {
+      let finalIdentifier = identifier;
+      if (role !== 'admin') {
+        const countryCode = settings?.country_phone_code || '91';
+        let cleanId = identifier.replace(/\D/g, '');
+        if (cleanId.startsWith(countryCode)) {
+          cleanId = cleanId.slice(countryCode.length);
+        }
+        finalIdentifier = '+' + countryCode + cleanId;
+      }
       const response = await axios.post('/api/auth/forgot-password', {
         role,
-        identifier: '+' + identifier.replace(/\D/g, '')
+        identifier: finalIdentifier
       });
 
       if (response.data.otp_required) {
@@ -111,7 +147,7 @@ const ForgotPassword = () => {
             <p className="text-slate-500 mb-8 text-sm">Please verify your details to reset your password.</p>
 
             {/* Role Selector */}
-            <div className="grid grid-cols-2 gap-3 mb-8">
+            <div className="grid grid-cols-3 gap-2 mb-8">
               <button
                 type="button"
                 onClick={() => {
@@ -119,12 +155,12 @@ const ForgotPassword = () => {
                   setIdentifier('');
                   setMessage('');
                 }}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1.5 ${
                   role === 'candidate' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
                 }`}
               >
-                <User size={24} />
-                <span className="font-bold text-xs uppercase tracking-wider">Candidate</span>
+                <User size={20} />
+                <span className="font-bold text-[10px] uppercase tracking-wider">Candidate</span>
               </button>
               <button
                 type="button"
@@ -133,34 +169,68 @@ const ForgotPassword = () => {
                   setIdentifier('');
                   setMessage('');
                 }}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1.5 ${
                   role === 'employer' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
                 }`}
               >
-                <Building2 size={24} />
-                <span className="font-bold text-xs uppercase tracking-wider">Employer</span>
+                <Building2 size={20} />
+                <span className="font-bold text-[10px] uppercase tracking-wider">Employer</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRole('admin');
+                  setIdentifier('');
+                  setMessage('');
+                }}
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1.5 ${
+                  role === 'admin' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
+                }`}
+              >
+                <ShieldCheck size={20} className={role === 'admin' ? 'text-blue-600' : 'text-slate-400'} />
+                <span className="font-bold text-[10px] uppercase tracking-wider">Admin</span>
               </button>
             </div>
 
             <form onSubmit={handleIdentifierSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm font-bold text-slate-700">
-                  Mobile Number
-                </label>
-                <div className="relative flex items-center">
-                  <div className="absolute left-4 text-slate-500 font-bold select-none text-base">
-                    +
+              {role === 'admin' ? (
+                <div className="space-y-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="email"
+                      required
+                      className="w-full h-14 pl-12 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 text-slate-900 font-bold"
+                      placeholder="admin@jobconnect.gov.in"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                    />
                   </div>
-                  <input
-                    type="tel"
-                    required
-                    className="w-full h-14 pl-9 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 font-bold text-slate-700"
-                    placeholder="919876543210"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value.replace(/\D/g, ''))}
-                  />
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-sm font-bold text-slate-700">
+                    Mobile Number
+                  </label>
+                  <div className="relative flex items-center">
+                    <div className="absolute left-4 text-slate-500 font-bold select-none text-base border-r border-slate-200 pr-3 h-6 flex items-center">
+                      +{settings?.country_phone_code || '91'}
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      style={{ paddingLeft: `${(settings?.country_phone_code || '91').length * 9 + 52}px` }}
+                      className="w-full h-14 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 font-bold text-slate-700"
+                      placeholder="9876543210"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value.replace(/\D/g, ''))}
+                    />
+                  </div>
+                </div>
+              )}
 
               {message && <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm">{message}</div>}
 
@@ -293,7 +363,7 @@ const ForgotPassword = () => {
 
         <div className="mt-8 text-center text-sm text-slate-500 font-medium">
           Remembered your password?{' '}
-          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-bold hover:underline transition-all">
+          <Link to={role === 'admin' ? "/admin-login" : "/login"} className="text-blue-600 hover:text-blue-700 font-bold hover:underline transition-all">
             Login here
           </Link>
         </div>

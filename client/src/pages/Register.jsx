@@ -36,6 +36,7 @@ const Register = () => {
     }
   }, [step]);
   const [termsSlug, setTermsSlug] = useState('terms-and-conditions');
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -51,7 +52,16 @@ const Register = () => {
         console.error("Terms link sync failed", err);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setSettings(res.data);
+      } catch (err) {
+        console.error("Failed to load settings", err);
+      }
+    };
     fetchPages();
+    fetchSettings();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -59,9 +69,14 @@ const Register = () => {
     setIsLoading(true);
     setMessage('');
     try {
+      const countryCode = settings?.country_phone_code || '91';
+      let cleanPhone = formData.phone;
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
       const response = await axios.post('/api/auth/register', {
         ...formData,
-        phone: '+' + formData.phone,
+        phone: '+' + countryCode + cleanPhone,
         role
       });
       
@@ -164,14 +179,15 @@ const Register = () => {
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Mobile Number</label>
                 <div className="relative flex items-center">
-                  <div className="absolute left-4 text-slate-500 font-bold select-none text-base">
-                    +
+                  <div className="absolute left-4 text-slate-500 font-bold select-none text-base border-r border-slate-200 pr-3 h-6 flex items-center">
+                    +{settings?.country_phone_code || '91'}
                   </div>
                   <input
                     type="tel"
                     required
-                    className="w-full h-14 pl-9 pr-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none font-bold text-slate-700"
-                    placeholder="919876543210"
+                    style={{ paddingLeft: `${(settings?.country_phone_code || '91').length * 9 + 52}px` }}
+                    className="w-full h-14 pr-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-100 outline-none font-bold text-slate-700"
+                    placeholder="9876543210"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})}
                   />
@@ -310,6 +326,13 @@ const Register = () => {
             </div>
           </form>
         )}
+
+        <div className="mt-8 text-center text-sm text-slate-500 font-medium">
+          Already have an account?{' '}
+          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-bold hover:underline transition-all">
+            Login here
+          </Link>
+        </div>
       </div>
     </div>
   );

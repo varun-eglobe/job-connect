@@ -78,6 +78,18 @@ const EmployerDashboard = () => {
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [showPostingForm, setShowPostingForm] = useState(false);
   const [editingJobId, setEditingJobId] = useState(null);
+  const [settings, setSettings] = useState(null);
+
+  const getCurrencySymbol = (code) => {
+    switch (code) {
+      case 'INR': return '₹';
+      case 'AED': return 'AED ';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      default: return code ? code + ' ' : '';
+    }
+  };
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -162,10 +174,20 @@ const EmployerDashboard = () => {
       }
     };
 
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get('/api/settings');
+        setSettings(response.data);
+      } catch (err) {
+        console.error("Error fetching settings", err);
+      }
+    };
+
     if (employerId) {
       fetchStatus();
       fetchJobs();
       fetchLocations();
+      fetchSettings();
       const interval = setInterval(() => {
         fetchStatus();
         fetchJobs();
@@ -880,7 +902,7 @@ const EmployerDashboard = () => {
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Salary Range</label>
                   <input
                     type="text"
-                    placeholder="e.g. ₹15,000 - ₹20,000"
+                    placeholder={`e.g. ${getCurrencySymbol(settings?.currency_code || 'INR')}15,000 - ${getCurrencySymbol(settings?.currency_code || 'INR')}20,000`}
                     className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
                     value={formData.salary_range}
                     onChange={(e) => setFormData({...formData, salary_range: e.target.value})}

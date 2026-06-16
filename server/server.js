@@ -84,6 +84,46 @@ async function sendTwilioSms(twilioSid, twilioAuthToken, twilioPhone, toPhone, m
     }
 }
 
+function getPossiblePhoneNumbers(identifier, countryPhoneCode) {
+    if (!/^\+?\d+$/.test(identifier)) return [];
+    
+    const clean = identifier.replace(/\D/g, '');
+    const list = new Set();
+    
+    // Add raw clean number
+    list.add(clean);
+    list.add(`+${clean}`);
+    
+    // If it starts with the country phone code, also get the sliced local number
+    if (clean.startsWith(countryPhoneCode)) {
+        const sliced = clean.slice(countryPhoneCode.length);
+        list.add(sliced);
+        list.add(`+${sliced}`);
+    } else {
+        // If it doesn't start with the country phone code, add the country phone code prepended version
+        list.add(`${countryPhoneCode}${clean}`);
+        list.add(`+${countryPhoneCode}${clean}`);
+        
+        // If there is a leading zero, e.g. 0501234567, try stripping it and prepending country code
+        if (clean.startsWith('0')) {
+            const strippedZero = clean.slice(1);
+            list.add(strippedZero);
+            list.add(`+${strippedZero}`);
+            list.add(`${countryPhoneCode}${strippedZero}`);
+            list.add(`+${countryPhoneCode}${strippedZero}`);
+        }
+    }
+    
+    // Also include the legacy fallback: slice last 10 digits
+    if (clean.length > 10) {
+        const last10 = clean.slice(-10);
+        list.add(last10);
+        list.add(`+${last10}`);
+    }
+    
+    return Array.from(list);
+}
+
 async function generateAndSendOtp(phone, reason) {
     let otpCode = '9999';
     try {
@@ -891,26 +931,18 @@ app.post('/api/auth/login', async (req, res) => {
         let { identifier, password } = req.body;
         console.log(`Login attempt for: [${identifier}]`);
         
-        // Sanitize identifier if it's potentially a phone number
-        let searchIdentifier = identifier;
-        let originalClean = null;
-        if (/^\+?\d+$/.test(identifier)) {
-            // Remove + and leading country code if any (simplified for India)
-            const clean = identifier.replace(/\D/g, '');
-            originalClean = clean;
-            if (clean.length > 10) {
-              searchIdentifier = clean.slice(-10); // Take last 10 digits
-            } else {
-              searchIdentifier = clean;
-            }
+        const [settingsRows] = await db.query('SELECT country_phone_code FROM site_settings WHERE id = 1');
+        const countryPhoneCode = settingsRows[0]?.country_phone_code || '91';
+        
+        let query = 'SELECT * FROM users WHERE (email = ?';
+        let queryParams = [identifier];
+        
+        const possiblePhones = getPossiblePhoneNumbers(identifier, countryPhoneCode);
+        if (possiblePhones.length > 0) {
+            query += ' OR phone IN (' + possiblePhones.map(() => '?').join(', ') + ')';
+            queryParams.push(...possiblePhones);
         }
-
-        let query = 'SELECT * FROM users WHERE (email = ? OR phone = ? OR phone = ? OR phone = ?';
-        let queryParams = [searchIdentifier, searchIdentifier, identifier, `+${searchIdentifier}`];
-        if (originalClean) {
-            query += ' OR phone = ? OR phone = ?';
-            queryParams.push(originalClean, `+${originalClean}`);
-        }
+        
         query += ') AND password = ? AND is_deleted_by_admin = 0';
         queryParams.push(password);
 
@@ -1106,29 +1138,46 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             return res.status(400).json({ error: 'Role and identifier are required' });
         }
 
-        let searchIdentifier = identifier;
-        let originalClean = null;
-        if (/^\+?\d+$/.test(identifier)) {
-            const clean = identifier.replace(/\D/g, '');
-            originalClean = clean;
-            if (clean.length > 10) {
-                searchIdentifier = clean.slice(-10);
-            } else {
-                searchIdentifier = clean;
-            }
-        }
-
-        if (role !== 'candidate' && role !== 'employer') {
+        if (role !== 'candidate' && role !== 'employer' && role !== 'admin') {
             return res.status(400).json({ error: 'Invalid role' });
         }
 
-        let query = 'SELECT * FROM users WHERE role = ? AND (phone = ? OR phone = ?';
-        let params = [role, searchIdentifier, `+${searchIdentifier}`];
-        if (originalClean) {
-            query += ' OR phone = ? OR phone = ?';
-            params.push(originalClean, `+${originalClean}`);
+        const [settingsRows] = await db.query('SELECT country_phone_code FROM site_settings WHERE id = 1');
+        const countryPhoneCode = settingsRows[0]?.country_phone_code || '91';
+
+        let query;
+        let params = [];
+        
+        if (role === 'admin') {
+            if (identifier.includes('@')) {
+                query = 'SELECT * FROM users WHERE role = ? AND email = ? AND is_deleted_by_admin = 0';
+                params = ['admin', identifier.trim().toLowerCase()];
+            } else {
+                query = 'SELECT * FROM users WHERE role = ? AND (';
+                params = ['admin'];
+                const possiblePhones = getPossiblePhoneNumbers(identifier, countryPhoneCode);
+                if (possiblePhones.length > 0) {
+                    query += 'phone IN (' + possiblePhones.map(() => '?').join(', ') + ')';
+                    params.push(...possiblePhones);
+                } else {
+                    query += 'phone = ?';
+                    params.push(identifier);
+                }
+                query += ') AND is_deleted_by_admin = 0';
+            }
+        } else {
+            query = 'SELECT * FROM users WHERE role = ? AND (';
+            params = [role];
+            const possiblePhones = getPossiblePhoneNumbers(identifier, countryPhoneCode);
+            if (possiblePhones.length > 0) {
+                query += 'phone IN (' + possiblePhones.map(() => '?').join(', ') + ')';
+                params.push(...possiblePhones);
+            } else {
+                query += 'phone = ?';
+                params.push(identifier);
+            }
+            query += ') AND is_deleted_by_admin = 0';
         }
-        query += ') AND is_deleted_by_admin = 0';
 
         const [rows] = await db.query(query, params);
         if (rows.length === 0) {
@@ -1344,7 +1393,12 @@ app.post('/api/employers/payment', async (req, res) => {
         const { employer_id } = req.body;
         // Simulate payment success and update status
         await db.execute('UPDATE users SET payment_status = "paid" WHERE id = ? AND role = "employer"', [employer_id]);
-        res.json({ success: true, message: 'Payment successful, registration fee (₹100) paid.' });
+        
+        const [settings] = await db.query('SELECT currency_code FROM site_settings WHERE id = 1');
+        const currencyCode = settings[0]?.currency_code || 'INR';
+        const currencySymbol = getCurrencySymbol(currencyCode);
+        
+        res.json({ success: true, message: `Payment successful, registration fee (${currencySymbol}100) paid.` });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Payment failed' });
@@ -1709,6 +1763,17 @@ app.get('/api/manifest.json', async (req, res) => {
     }
 });
 
+function getCurrencySymbol(code) {
+    switch (code) {
+        case 'INR': return '₹';
+        case 'AED': return 'AED ';
+        case 'USD': return '$';
+        case 'EUR': return '€';
+        case 'GBP': return '£';
+        default: return code ? code + ' ' : '';
+    }
+}
+
 async function handleSettingsUpdate(req, res) {
     try {
         const s = req.body;
@@ -1730,7 +1795,8 @@ async function handleSettingsUpdate(req, res) {
             job_id_prefix = ?,
             interview_rules = ?,
             twilio_sid = ?, twilio_auth_token = ?,
-            twilio_phone_number = ?, twilio_enabled = ?
+            twilio_phone_number = ?, twilio_enabled = ?,
+            currency_code = ?, country_phone_code = ?
             WHERE id = 1
         `;
         const params = [
@@ -1760,7 +1826,9 @@ async function handleSettingsUpdate(req, res) {
             s.twilio_sid || null,
             s.twilio_auth_token || null,
             s.twilio_phone_number || null,
-            s.twilio_enabled !== undefined ? (s.twilio_enabled ? 1 : 0) : 0
+            s.twilio_enabled !== undefined ? (s.twilio_enabled ? 1 : 0) : 0,
+            s.currency_code || 'INR',
+            s.country_phone_code || '91'
         ];
 
         await db.execute(sql, params);

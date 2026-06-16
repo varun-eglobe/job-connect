@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const AdminLogin = () => {
@@ -94,6 +94,7 @@ const AdminLogin = () => {
             <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-slate-700">Password</label>
+                <Link to="/forgot-password?role=admin" className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Forgot password?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />

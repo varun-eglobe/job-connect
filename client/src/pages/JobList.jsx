@@ -399,7 +399,7 @@ const JobList = () => {
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
+              <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm">
                 <Filter size={20} />
               </div>
               {companyFilter ? `Jobs at "${companyFilter}"` : searchFilter ? `Search: "${searchFilter}"` : 'Job Opportunities'} 
@@ -698,8 +698,6 @@ const JobList = () => {
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-50 flex flex-col gap-4">
-                  <p className="text-slate-600 text-sm line-clamp-2 leading-relaxed">{job.description}</p>
-
                   {/* Requirements Grid */}
                   <div className={`grid grid-cols-2 ${
                     job.is_token_based && job.age_range ? 'sm:grid-cols-5' : 

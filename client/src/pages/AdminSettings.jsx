@@ -96,7 +96,9 @@ const AdminSettings = () => {
         twilio_sid: '',
         twilio_auth_token: '',
         twilio_phone_number: '',
-        twilio_enabled: 0
+        twilio_enabled: 0,
+        currency_code: 'INR',
+        country_phone_code: '91'
     });
     const [pages, setPages] = useState([]);
     const [editingPage, setEditingPage] = useState(null);
@@ -509,13 +511,13 @@ const AdminSettings = () => {
         { id: 'locations', label: 'Locations Master', icon: MapPin, permission: 'manage_locations' },
         { id: 'homepage', label: 'Home Page CMS', icon: Globe, permission: 'manage_homepage' },
         { id: 'branding', label: 'App Branding', icon: Layout, permission: 'manage_branding' },
-        { id: 'sms', label: 'SMS Configuration', icon: Mail, permission: 'manage_branding' },
-        { id: 'interview_rules', label: 'Interview Rules', icon: FileText, permission: 'manage_branding' },
-        { id: 'domains', label: 'Domain Rules', icon: ShieldCheck, permission: 'manage_branding' },
+        { id: 'sms', label: 'SMS Configuration', icon: Mail, permission: 'manage_sms' },
+        { id: 'interview_rules', label: 'Interview Rules', icon: FileText, permission: 'manage_rules' },
+        { id: 'domains', label: 'Domain Rules', icon: ShieldCheck, permission: 'manage_domains' },
         { id: 'support', label: 'Support Directory', icon: HelpCircle, permission: 'manage_support' },
         { id: 'pages', label: 'Footer Pages', icon: FileText, permission: 'manage_pages' },
-        { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, permission: 'manage_homepage' },
-        { id: 'csr', label: 'CSR Partners', icon: Building2, permission: 'manage_homepage' },
+        { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, permission: 'manage_testimonials' },
+        { id: 'csr', label: 'CSR Partners', icon: Building2, permission: 'manage_csr' },
         { id: 'security', label: 'Security & Account', icon: Lock, permission: null },
     ].filter(tab => !tab.permission || can(tab.permission));
 
@@ -759,13 +761,18 @@ const AdminSettings = () => {
                                                         </div>
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
                                                             {[
-                                                                { key: 'manage_employers', label: 'Employer Management', desc: 'Verify/Reject employers and manage portal' },
-                                                                { key: 'manage_support', label: 'Support Directory', desc: 'Add/Edit Ward offices and helpdesks' },
-                                                                { key: 'manage_locations', label: 'Locations Master', desc: 'Manage Wards and Panchayat names' },
-                                                                { key: 'manage_homepage', label: 'Home Page CMS', desc: 'Change banner text and statistics' },
-                                                                { key: 'manage_branding', label: 'Branding & Identity', desc: 'Change logo, icons, and app name' },
-                                                                { key: 'manage_pages', label: 'Static Pages', desc: 'Manage Terms, Privacy, and Footer pages' },
-                                                                { key: 'manage_users', label: 'User Manager', desc: 'Create and manage other staff accounts' },
+                                                                 { key: 'manage_employers', label: 'Employer Management', desc: 'Verify/Reject employers and manage portal' },
+                                                                 { key: 'manage_users', label: 'User Manager', desc: 'Create and manage other staff accounts' },
+                                                                 { key: 'manage_locations', label: 'Locations Master', desc: 'Manage Wards and Panchayat names' },
+                                                                 { key: 'manage_homepage', label: 'Home Page CMS', desc: 'Change banner text and statistics' },
+                                                                 { key: 'manage_branding', label: 'App Branding', desc: 'Change logo, icons, and app name' },
+                                                                 { key: 'manage_sms', label: 'SMS Configuration', desc: 'Configure Twilio API and toggle OTP delivery' },
+                                                                 { key: 'manage_rules', label: 'Interview Rules', desc: 'Define guidelines shown to candidates' },
+                                                                 { key: 'manage_domains', label: 'Domain Rules', desc: 'Restrict verification features by domains' },
+                                                                 { key: 'manage_support', label: 'Support Directory', desc: 'Add/Edit Ward offices and helpdesks' },
+                                                                 { key: 'manage_pages', label: 'Footer Pages', desc: 'Manage Terms, Privacy, and custom footer pages' },
+                                                                 { key: 'manage_testimonials', label: 'Testimonials', desc: 'Manage official quotes on the home page' },
+                                                                 { key: 'manage_csr', label: 'CSR Partners', desc: 'Manage partners list and CSR description' },
                                                             ].map(p => (
                                                                 <div 
                                                                     key={p.key} 
@@ -1270,10 +1277,10 @@ const AdminSettings = () => {
                                                 <input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" value={settings.app_name || 'JobConnect'} onChange={(e) => setSettings({...settings, app_name: e.target.value})} placeholder="e.g. JobConnect" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Job Post ID Prefix</label>
-                                                <input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" value={settings.job_id_prefix || 'JC'} onChange={(e) => setSettings({...settings, job_id_prefix: e.target.value})} placeholder="e.g. JC" />
-                                                <p className="text-[10px] text-slate-400 italic px-1">Used to generate unique Job Post IDs (e.g. PREFIX-MMYY-1234567).</p>
-                                            </div>
+                                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Job Post ID Prefix</label>
+                                                 <input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" value={settings.job_id_prefix || 'JC'} onChange={(e) => setSettings({...settings, job_id_prefix: e.target.value})} placeholder="e.g. JC" />
+                                                 <p className="text-[10px] text-slate-400 italic px-1">Used to generate unique Job Post IDs (e.g. PREFIX-MMYY-1234567).</p>
+                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Upload New Icon</label>
                                                 <div className="relative group">
@@ -1312,6 +1319,25 @@ const AdminSettings = () => {
                                             </div>
                                             <div className="mt-4 font-bold text-slate-800 text-sm">{settings.app_name || 'JobConnect'}</div>
                                             <div className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Home Screen</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-8 border-t border-slate-100">
+                                        <div className="flex items-center gap-2 mb-6">
+                                            <Globe size={18} className="text-blue-600" />
+                                            <h3 className="font-black text-slate-800 uppercase tracking-wider text-sm">Country & Currency Settings</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Country Phone Code (Prefix)</label>
+                                                <input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" value={settings.country_phone_code || '91'} onChange={(e) => setSettings({...settings, country_phone_code: e.target.value.replace(/\D/g, '')})} placeholder="e.g. 91, 971" />
+                                                <p className="text-[10px] text-slate-400 italic px-1">Configure the country code for mobile registration and OTP messages (e.g., 91 for India, 971 for UAE).</p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Local Currency Code</label>
+                                                 <input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-100" value={settings.currency_code || 'INR'} onChange={(e) => setSettings({...settings, currency_code: e.target.value.toUpperCase()})} placeholder="e.g. INR, AED, USD" />
+                                                 <p className="text-[10px] text-slate-400 italic px-1">Determines the currency symbols shown across registration checkout and job posts.</p>
+                                             </div>
                                         </div>
                                     </div>
 
@@ -1466,7 +1492,7 @@ const AdminSettings = () => {
                             </div>
                         )}
 
-                        {activeTab === 'sms' && can('manage_branding') && (
+                        {activeTab === 'sms' && can('manage_sms') && (
                             <div className="animate-in fade-in duration-500 font-sans">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                     <div>
@@ -1541,8 +1567,8 @@ const AdminSettings = () => {
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl h-24 flex items-center gap-3">
-                                                <HelpCircle size={20} className="text-slate-400 shrink-0" />
+                                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-start gap-3">
+                                                <HelpCircle size={20} className="text-slate-400 shrink-0 mt-0.5" />
                                                 <p className="text-[10px] text-slate-500 leading-relaxed">
                                                     Once configured and toggled to <strong>Enabled</strong>, all verification codes generated for candidate registration, login, phone changes, and resets will be delivered as real SMS messages to the user's mobile. If disabled, the portal will fall back to using <strong>9999</strong> for local/dev verification.
                                                 </p>
@@ -1553,7 +1579,7 @@ const AdminSettings = () => {
                             </div>
                         )}
 
-                        {activeTab === 'interview_rules' && can('manage_branding') && (
+                        {activeTab === 'interview_rules' && can('manage_rules') && (
                             <div className="animate-in fade-in duration-500 font-sans">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                     <div>
@@ -1652,7 +1678,7 @@ const AdminSettings = () => {
                             </div>
                         )}
 
-                        {activeTab === 'testimonials' && can('manage_homepage') && (
+                        {activeTab === 'testimonials' && can('manage_testimonials') && (
                             <div className="animate-in fade-in duration-500">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                     <div><h2 className="text-xl font-black text-slate-800">Testimonials Management</h2><p className="text-sm text-slate-500">Add official quotes from authorities for the home page.</p></div>
@@ -1723,7 +1749,7 @@ const AdminSettings = () => {
                             </div>
                         )}
 
-                        {activeTab === 'csr' && can('manage_homepage') && (
+                        {activeTab === 'csr' && can('manage_csr') && (
                             <div className="animate-in fade-in duration-500">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                     <div><h2 className="text-xl font-black text-slate-800">CSR Partners Content</h2><p className="text-sm text-slate-500">Manage description and partners list.</p></div>
@@ -1822,7 +1848,7 @@ const AdminSettings = () => {
                             </div>
                         )}
 
-                        {activeTab === 'domains' && can('manage_branding') && (
+                        {activeTab === 'domains' && can('manage_domains') && (
                             <div className="animate-in fade-in duration-500 font-sans">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                     <div><h2 className="text-xl font-black text-slate-800">Domain Restriction Rules</h2><p className="text-sm text-slate-500">Show or hide verification features on specific URLs/domains.</p></div>

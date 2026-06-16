@@ -30,6 +30,19 @@ const Login = () => {
   const [debugLoading, setDebugLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('employer');
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setSettings(res.data);
+      } catch (err) {
+        console.error("Failed to load settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const isLocalhost = window.location.hostname === 'localhost' || 
                       window.location.hostname === '127.0.0.1' || 
@@ -73,9 +86,17 @@ const Login = () => {
     setIsLoading(true);
     setMessage('');
     try {
+      const countryCode = settings?.country_phone_code || '91';
+      let cleanId = formData.identifier;
+      if (/^\d+$/.test(cleanId)) {
+        if (cleanId.startsWith(countryCode)) {
+          cleanId = cleanId.slice(countryCode.length);
+        }
+        cleanId = '+' + countryCode + cleanId;
+      }
       const response = await axios.post('/api/auth/login', {
         ...formData,
-        identifier: '+' + formData.identifier
+        identifier: cleanId
       });
       
       if (response.data.otp_required) {
@@ -144,14 +165,15 @@ const Login = () => {
             <div className="space-y-1">
               <label className="text-sm font-bold text-slate-700">Mobile Number</label>
               <div className="relative flex items-center">
-                <div className="absolute left-4 text-slate-500 font-bold select-none text-base">
-                  +
+                <div className="absolute left-4 text-slate-500 font-bold select-none text-base border-r border-slate-200 pr-3 h-6 flex items-center">
+                  +{settings?.country_phone_code || '91'}
                 </div>
                 <input 
                   type="tel" 
                   required
-                  className="w-full h-14 pl-9 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 font-bold text-slate-700"
-                  placeholder="919876543210"
+                  style={{ paddingLeft: `${(settings?.country_phone_code || '91').length * 9 + 52}px` }}
+                  className="w-full h-14 pr-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 font-bold text-slate-700"
+                  placeholder="9876543210"
                   value={formData.identifier}
                   onChange={(e) => setFormData({...formData, identifier: e.target.value.replace(/\D/g, '')})}
                 />

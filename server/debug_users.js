@@ -8,7 +8,7 @@ async function run() {
     database: 'jobconnect_db'
   });
 
-  const [rows] = await db.query('SELECT id, name, email, password, role FROM users');
+  const [rows] = await db.query('SELECT id, name, email, phone, password, role FROM users');
   console.log('Current Users in Database:');
   console.log(rows);
   process.exit();

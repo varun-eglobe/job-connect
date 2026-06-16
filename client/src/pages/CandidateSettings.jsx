@@ -34,18 +34,31 @@ const CandidateSettings = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [otpTransactionToken, setOtpTransactionToken] = useState('');
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`/api/users/${userId}`);
-        const formattedPhone = (response.data.phone || '').replace(/^\+/, '');
+        const [settingsRes, userRes] = await Promise.all([
+          axios.get('/api/settings'),
+          userId ? axios.get(`/api/users/${userId}`) : Promise.resolve({ data: {} })
+        ]);
+        
+        setSettings(settingsRes.data);
+        
+        const countryCode = settingsRes.data?.country_phone_code || '91';
+        const rawPhone = (userRes.data.phone || '').replace(/^\+/, '');
+        let formattedPhone = rawPhone;
+        if (rawPhone.startsWith(countryCode)) {
+          formattedPhone = rawPhone.slice(countryCode.length);
+        }
+
         let formattedDob = '';
-        if (response.data.dob) {
-          if (typeof response.data.dob === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(response.data.dob)) {
-            formattedDob = response.data.dob;
+        if (userRes.data.dob) {
+          if (typeof userRes.data.dob === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(userRes.data.dob)) {
+            formattedDob = userRes.data.dob;
           } else {
-            const d = new Date(response.data.dob);
+            const d = new Date(userRes.data.dob);
             if (!isNaN(d.getTime())) {
               const year = d.getFullYear();
               const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -54,18 +67,19 @@ const CandidateSettings = () => {
             }
           }
         }
+
         setProfile({
-          name: response.data.name || '',
+          name: userRes.data.name || '',
           phone: formattedPhone,
-          email: response.data.email || '',
+          email: userRes.data.email || '',
           dob: formattedDob
         });
         setOriginalPhone(formattedPhone);
       } catch (err) {
-        console.error("Error fetching profile", err);
+        console.error("Error fetching data", err);
       }
     };
-    if (userId) fetchProfile();
+    fetchData();
   }, [userId]);
 
   const handlePhoneChange = (newPhone) => {
@@ -86,7 +100,12 @@ const CandidateSettings = () => {
     setOtpLoading(true);
     setOtpError('');
     try {
-      const fullPhone = '+' + profile.phone.replace(/\D/g, '');
+      const countryCode = settings?.country_phone_code || '91';
+      let cleanPhone = profile.phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
+      const fullPhone = '+' + countryCode + cleanPhone;
       const res = await axios.post('/api/auth/phone-verify/send-otp', {
         phone: fullPhone
       });
@@ -127,9 +146,15 @@ const CandidateSettings = () => {
       return;
     }
     try {
+      const countryCode = settings?.country_phone_code || '91';
+      let cleanPhone = profile.phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
+      const fullPhone = '+' + countryCode + cleanPhone;
       await axios.put(`/api/users/${userId}`, {
         ...profile,
-        phone: '+' + profile.phone.replace(/\D/g, '')
+        phone: fullPhone
       });
       setProfileMessage({ type: 'success', text: 'Profile updated successfully' });
       setOriginalPhone(profile.phone);
@@ -207,17 +232,19 @@ const CandidateSettings = () => {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Mobile Number</label>
                   <div className="relative flex items-center">
-                    <div className="absolute left-4 text-slate-500 font-bold select-none text-base">
-                      +
+                    <div className="absolute left-4 text-slate-500 font-bold select-none text-base border-r border-slate-200 pr-3 h-6 flex items-center">
+                      +{settings?.country_phone_code || '91'}
                     </div>
                     <input
                       type="tel"
                       required
-                      className={`w-full h-12 pl-9 pr-10 rounded-xl border outline-none font-bold transition-all ${
+                      style={{ paddingLeft: `${(settings?.country_phone_code || '91').length * 9 + 52}px` }}
+                      className={`w-full h-12 pr-10 rounded-xl border outline-none font-bold transition-all ${
                         phoneVerified ? 'border-emerald-400 bg-emerald-50/20 text-slate-700 focus:ring-emerald-100' :
                         profile.phone !== originalPhone ? 'border-amber-400 bg-amber-50/10 focus:ring-amber-100' :
                         'border-slate-200 focus:ring-blue-100 text-slate-700'
                       }`}
+                      placeholder="9876543210"
                       value={profile.phone}
                       readOnly={phoneVerified}
                       onChange={(e) => handlePhoneChange(e.target.value)}
@@ -246,7 +273,7 @@ const CandidateSettings = () => {
                   {otpStep && !phoneVerified && (
                     <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
                       <p className="text-[11px] text-blue-800 font-bold">
-                        Enter the 4-digit OTP sent to +{profile.phone}
+                        Enter the 4-digit OTP sent to +{settings?.country_phone_code || '91'}{profile.phone}
                       </p>
                       <div className="flex gap-2">
                         <input

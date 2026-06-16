@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, CheckCircle2, ShieldCheck } from 'lucide-react';
@@ -8,6 +8,24 @@ const PaymentSimulation = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const employerId = localStorage.getItem('user_id');
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    axios.get('/api/settings')
+      .then(res => setSettings(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const getCurrencySymbol = (code) => {
+    switch (code) {
+      case 'INR': return '₹';
+      case 'AED': return 'AED ';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      default: return code ? code + ' ' : '';
+    }
+  };
 
   const handlePayment = async () => {
     setLoading(true);
@@ -35,7 +53,7 @@ const PaymentSimulation = () => {
             <CheckCircle2 size={40} />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 mb-2">Payment Successful!</h2>
-          <p className="text-slate-500 mb-6">Registration fee of ₹100 received. Redirecting to your dashboard...</p>
+          <p className="text-slate-500 mb-6">Registration fee of {getCurrencySymbol(settings?.currency_code || 'INR')}100 received. Redirecting to your dashboard...</p>
         </div>
       </div>
     );
@@ -57,15 +75,15 @@ const PaymentSimulation = () => {
         <div className="bg-slate-50 p-6 rounded-2xl mb-8 border border-slate-100">
           <div className="flex justify-between items-center mb-2">
             <span className="text-slate-600">Verification Fee</span>
-            <span className="font-bold">₹100.00</span>
+            <span className="font-bold">{getCurrencySymbol(settings?.currency_code || 'INR')}100.00</span>
           </div>
           <div className="flex justify-between items-center text-sm text-slate-400">
             <span>Processing fee</span>
-            <span>₹0.00</span>
+            <span>{getCurrencySymbol(settings?.currency_code || 'INR')}0.00</span>
           </div>
           <div className="border-t border-slate-200 mt-4 pt-4 flex justify-between items-center">
             <span className="font-bold text-slate-800">Total Due</span>
-            <span className="text-2xl font-black text-blue-600">₹100</span>
+            <span className="text-2xl font-black text-blue-600">{getCurrencySymbol(settings?.currency_code || 'INR')}100</span>
           </div>
         </div>
 

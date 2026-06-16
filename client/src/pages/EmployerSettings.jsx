@@ -66,8 +66,18 @@ const EmployerSettings = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`/api/users/${userId}`);
-        const formattedPhone = (response.data.phone || '').replace(/^\+/, '');
+        const [response, settingsRes] = await Promise.all([
+          axios.get(`/api/users/${userId}`),
+          axios.get('/api/settings')
+        ]);
+        
+        const rawPhone = (response.data.phone || '').replace(/^\+/, '');
+        const countryCode = settingsRes.data?.country_phone_code || '91';
+        let formattedPhone = rawPhone;
+        if (rawPhone.startsWith(countryCode)) {
+          formattedPhone = rawPhone.slice(countryCode.length);
+        }
+
         setProfile({
           name: response.data.name || '',
           company_name: response.data.company_name || '',
@@ -112,7 +122,12 @@ const EmployerSettings = () => {
     setOtpLoading(true);
     setOtpError('');
     try {
-      const fullPhone = '+' + profile.phone.replace(/\D/g, '');
+      const countryCode = siteSettings?.country_phone_code || '91';
+      let cleanPhone = profile.phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
+      const fullPhone = '+' + countryCode + cleanPhone;
       const res = await axios.post('/api/auth/phone-verify/send-otp', {
         phone: fullPhone
       });
@@ -153,9 +168,15 @@ const EmployerSettings = () => {
       return;
     }
     try {
+      const countryCode = siteSettings?.country_phone_code || '91';
+      let cleanPhone = profile.phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
+      const fullPhone = '+' + countryCode + cleanPhone;
       const res = await axios.put(`/api/users/${userId}`, {
         ...profile,
-        phone: '+' + profile.phone.replace(/\D/g, '')
+        phone: fullPhone
       });
       localStorage.setItem('name', profile.name);
       if (profile.company_name) {
@@ -341,17 +362,19 @@ const EmployerSettings = () => {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Mobile Number</label>
                   <div className="relative flex items-center">
-                    <div className="absolute left-4 text-slate-500 font-bold select-none text-base">
-                      +
+                    <div className="absolute left-4 text-slate-500 font-bold select-none text-base border-r border-slate-200 pr-3 h-6 flex items-center">
+                      +{siteSettings?.country_phone_code || '91'}
                     </div>
                     <input
                       type="tel"
                       required
-                      className={`w-full h-12 pl-9 pr-10 rounded-xl border outline-none font-bold transition-all ${
+                      style={{ paddingLeft: `${(siteSettings?.country_phone_code || '91').length * 9 + 52}px` }}
+                      className={`w-full h-12 pr-10 rounded-xl border outline-none font-bold transition-all ${
                         phoneVerified ? 'border-emerald-400 bg-emerald-50/20 text-slate-700 focus:ring-emerald-100' :
                         profile.phone !== originalPhone ? 'border-amber-400 bg-amber-50/10 focus:ring-amber-100' :
                         'border-slate-200 focus:ring-blue-100 text-slate-700'
                       }`}
+                      placeholder="9876543210"
                       value={profile.phone}
                       readOnly={phoneVerified}
                       onChange={(e) => handlePhoneChange(e.target.value)}
@@ -380,7 +403,7 @@ const EmployerSettings = () => {
                   {otpStep && !phoneVerified && (
                     <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
                       <p className="text-[11px] text-blue-800 font-bold">
-                        Enter the 4-digit OTP sent to +{profile.phone}
+                        Enter the 4-digit OTP sent to +{siteSettings?.country_phone_code || '91'}{profile.phone}
                       </p>
                       <div className="flex gap-2">
                         <input

@@ -25,11 +25,36 @@ const formatDateSafely = (dateStr) => {
   }
 };
 
+const isPastDate = (dateStr) => {
+  if (!dateStr) return false;
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const cleaned = String(dateStr).split(' ')[0];
+    const parts = cleaned.split('-');
+    if (parts.length !== 3) return false;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const scheduledDate = new Date(year, month, day);
+    if (isNaN(scheduledDate.getTime())) return false;
+    scheduledDate.setHours(0, 0, 0, 0);
+    return scheduledDate < today;
+  } catch (e) {
+    return false;
+  }
+};
+
 const CandidateDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('upcoming');
   const userId = localStorage.getItem('user_id');
+
+  const upcomingApplications = applications.filter(app => !isPastDate(app.token_slot_date));
+  const finishedApplications = applications.filter(app => isPastDate(app.token_slot_date));
+  const displayedApplications = activeFilter === 'upcoming' ? upcomingApplications : finishedApplications;
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -102,12 +127,56 @@ const CandidateDashboard = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-6">
-          {applications.map((app) => (
-            <div 
-              key={app.application_id} 
-              className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+        <div className="space-y-6">
+          {/* Tab Selector */}
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit">
+            <button
+              onClick={() => setActiveFilter('upcoming')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                activeFilter === 'upcoming'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
             >
+              Upcoming ({upcomingApplications.length})
+            </button>
+            <button
+              onClick={() => setActiveFilter('finished')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                activeFilter === 'finished'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Finished ({finishedApplications.length})
+            </button>
+          </div>
+
+          {displayedApplications.length === 0 ? (
+            <div className="bg-white border border-slate-200 border-dashed rounded-3xl p-16 text-center shadow-sm">
+              <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                <Briefcase size={20} />
+              </div>
+              <h3 className="text-sm font-bold text-slate-700 mb-1">
+                No {activeFilter === 'upcoming' ? 'Upcoming' : 'Finished'} Interviews
+              </h3>
+              <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+                {activeFilter === 'upcoming' 
+                  ? "You don't have any upcoming interview passes. Any new job applications will appear here." 
+                  : "You don't have any past or finished interviews listed."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {displayedApplications.map((app) => {
+                const isPast = isPastDate(app.token_slot_date);
+                return (
+                  <div 
+                    key={app.application_id} 
+                    className={`bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ${
+                      isPast ? 'opacity-70 hover:opacity-100' : ''
+                    }`}
+                  >
               {/* Header block of booking */}
               <div className="bg-slate-50/50 border-b border-slate-100 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -225,7 +294,10 @@ const CandidateDashboard = () => {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
+            </div>
+          )}
         </div>
       )}
 
