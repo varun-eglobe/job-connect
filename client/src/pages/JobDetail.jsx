@@ -52,6 +52,16 @@ const JobDetail = () => {
   const [candidateApplications, setCandidateApplications] = useState([]);
   const [locations, setLocations] = useState([]);
 
+  const formatSalary = (range) => {
+    if (!range) return 'Not Disclosed';
+    const cleanRange = range.trim();
+    if (/^\d/.test(cleanRange)) {
+      const currency = settings?.currency_code || 'INR';
+      return `${currency} ${cleanRange}`;
+    }
+    return cleanRange;
+  };
+
   const resolveLocation = (locationName) => {
     if (!locationName) return '—';
     if (!Array.isArray(locations)) return locationName;
@@ -371,7 +381,7 @@ const JobDetail = () => {
                     </div>
                     <div>
                       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Offered Salary Range</div>
-                      <div className="font-extrabold text-emerald-700 text-xl">{job.salary_range} / month</div>
+                      <div className="font-extrabold text-emerald-700 text-xl">{formatSalary(job.salary_range)} / month</div>
                     </div>
                   </div>
                 )}

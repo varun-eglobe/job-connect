@@ -544,6 +544,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/admin-forgot-password" element={<ForgotPassword isAdmin={true} />} />
             <Route path="/csr-partners" element={<CSRPartners />} />
             <Route path="/page/:slug" element={<StaticPage />} />
           </Routes>

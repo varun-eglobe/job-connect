@@ -9,6 +9,7 @@ const AdminLogin = () => {
   const [step, setStep] = useState(1); // 1: Login, 2: OTP
   const [transactionToken, setTransactionToken] = useState('');
   const [message, setMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const AdminLogin = () => {
       
       if (response.data.otp_required) {
         setTransactionToken(response.data.transaction_token);
+        setSuccessMessage(response.data.message || 'OTP sent successfully.');
         setStep(2);
         setIsLoading(false);
         return;
@@ -94,7 +96,7 @@ const AdminLogin = () => {
             <div className="space-y-1">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-slate-700">Password</label>
-                <Link to="/forgot-password?role=admin" className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Forgot password?</Link>
+                <Link to="/admin-forgot-password" className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline">Forgot password?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -130,7 +132,7 @@ const AdminLogin = () => {
         ) : (
           <form onSubmit={handleOtpVerify} className="space-y-6 animate-in fade-in duration-500">
             <div className="p-4 bg-blue-50 border border-blue-100 text-blue-700 rounded-2xl text-xs font-bold leading-relaxed">
-              An administrative verification token has been generated. Please enter it below to authorize this session. (Dev Mode: 9999)
+              {successMessage || 'An administrative verification token has been generated. Please enter it below to authorize this session.'}
             </div>
 
             <div className="space-y-1">

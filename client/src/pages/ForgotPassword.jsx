@@ -3,8 +3,8 @@ import axios from 'axios';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Key, User, Building2, Lock, ArrowRight, Eye, EyeOff, CheckCircle, ShieldCheck, Mail } from 'lucide-react';
 
-const ForgotPassword = () => {
-  const [role, setRole] = useState('candidate');
+const ForgotPassword = ({ isAdmin = false }) => {
+  const [role, setRole] = useState(isAdmin ? 'admin' : 'candidate');
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -13,6 +13,7 @@ const ForgotPassword = () => {
   const [step, setStep] = useState(1); // 1: Lookup, 2: Reset Form, 3: Success
   const [transactionToken, setTransactionToken] = useState('');
   const [message, setMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,12 +24,16 @@ const ForgotPassword = () => {
   const otpInputRef = useRef(null);
 
   useEffect(() => {
+    if (isAdmin) {
+      setRole('admin');
+      return;
+    }
     const params = new URLSearchParams(search);
     const r = params.get('role');
-    if (r === 'admin' || r === 'candidate' || r === 'employer') {
+    if (r === 'candidate' || r === 'employer') {
       setRole(r);
     }
-  }, [search]);
+  }, [search, isAdmin]);
 
   useEffect(() => {
     if (step === 2) {
@@ -92,6 +97,7 @@ const ForgotPassword = () => {
 
       if (response.data.otp_required) {
         setTransactionToken(response.data.transaction_token);
+        setSuccessMessage(response.data.message || 'OTP sent successfully.');
         setStep(2);
       }
     } catch (err) {
@@ -141,56 +147,48 @@ const ForgotPassword = () => {
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-6">
-              <Key size={32} />
+              {isAdmin ? <ShieldCheck size={32} /> : <Key size={32} />}
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Reset Password</h2>
-            <p className="text-slate-500 mb-8 text-sm">Please verify your details to reset your password.</p>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              {isAdmin ? 'Administrative Reset' : 'Reset Password'}
+            </h2>
+            <p className="text-slate-500 mb-8 text-sm">
+              {isAdmin ? 'Verify your administrative email to reset password.' : 'Please verify your details to reset your password.'}
+            </p>
 
             {/* Role Selector */}
-            <div className="grid grid-cols-3 gap-2 mb-8">
-              <button
-                type="button"
-                onClick={() => {
-                  setRole('candidate');
-                  setIdentifier('');
-                  setMessage('');
-                }}
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1.5 ${
-                  role === 'candidate' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
-                }`}
-              >
-                <User size={20} />
-                <span className="font-bold text-[10px] uppercase tracking-wider">Candidate</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRole('employer');
-                  setIdentifier('');
-                  setMessage('');
-                }}
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1.5 ${
-                  role === 'employer' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
-                }`}
-              >
-                <Building2 size={20} />
-                <span className="font-bold text-[10px] uppercase tracking-wider">Employer</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRole('admin');
-                  setIdentifier('');
-                  setMessage('');
-                }}
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all gap-1.5 ${
-                  role === 'admin' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
-                }`}
-              >
-                <ShieldCheck size={20} className={role === 'admin' ? 'text-blue-600' : 'text-slate-400'} />
-                <span className="font-bold text-[10px] uppercase tracking-wider">Admin</span>
-              </button>
-            </div>
+            {!isAdmin && (
+              <div className="grid grid-cols-2 gap-3 mb-8">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRole('candidate');
+                    setIdentifier('');
+                    setMessage('');
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${
+                    role === 'candidate' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
+                  }`}
+                >
+                  <User size={24} />
+                  <span className="font-bold text-xs uppercase tracking-wider">Candidate</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRole('employer');
+                    setIdentifier('');
+                    setMessage('');
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${
+                    role === 'employer' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400 grayscale'
+                  }`}
+                >
+                  <Building2 size={24} />
+                  <span className="font-bold text-xs uppercase tracking-wider">Employer</span>
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleIdentifierSubmit} className="space-y-4">
               {role === 'admin' ? (
@@ -256,7 +254,7 @@ const ForgotPassword = () => {
 
             <form onSubmit={handlePasswordResetSubmit} className="space-y-4">
               <div className="p-4 bg-blue-50 text-blue-700 rounded-2xl text-xs font-bold leading-relaxed border border-blue-100 mb-4">
-                A 4-digit verification code has been generated. Please enter it below along with your new password. (Dev Mode: 9999)
+                {successMessage || 'A 4-digit verification code has been generated. Please enter it below along with your new password.'}
               </div>
 
               <div className="space-y-1">

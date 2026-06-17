@@ -80,15 +80,14 @@ const EmployerDashboard = () => {
   const [editingJobId, setEditingJobId] = useState(null);
   const [settings, setSettings] = useState(null);
 
-  const getCurrencySymbol = (code) => {
-    switch (code) {
-      case 'INR': return '₹';
-      case 'AED': return 'AED ';
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return code ? code + ' ' : '';
+  const formatSalary = (range) => {
+    if (!range) return 'Not set';
+    const cleanRange = range.trim();
+    if (/^\d/.test(cleanRange)) {
+      const currency = settings?.currency_code || 'INR';
+      return `${currency} ${cleanRange}`;
     }
+    return cleanRange;
   };
   const [formData, setFormData] = useState({
     title: '',
@@ -667,9 +666,9 @@ const EmployerDashboard = () => {
                       <div className="border border-slate-100 rounded-xl overflow-hidden">
                         {/* Mobile: Salary full width */}
                         <div className="sm:hidden border-b border-slate-100 px-3 py-2 text-center">
-                          <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold leading-none mb-1">Salary</p>
+                          <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold leading-none mb-1">Salary ({settings?.currency_code || 'INR'})</p>
                           <p className="text-xs font-black text-slate-700 leading-none" title={job.salary_range || 'Not set'}>
-                            {job.salary_range || 'Not set'}
+                            {formatSalary(job.salary_range)}
                           </p>
                         </div>
                         {/* Mobile: Vacancy + Expires row | sm+: all three in one row */}
@@ -680,9 +679,9 @@ const EmployerDashboard = () => {
                           </div>
                           {/* Salary — hidden on mobile (shown above), visible sm+ */}
                           <div className="hidden sm:block flex-[2] px-3 py-2 text-center border-r border-slate-100">
-                            <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold leading-none mb-1">Salary</p>
+                            <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold leading-none mb-1">Salary ({settings?.currency_code || 'INR'})</p>
                             <p className="text-xs font-black text-slate-700 truncate leading-none" title={job.salary_range || 'Not set'}>
-                              {job.salary_range || 'Not set'}
+                              {formatSalary(job.salary_range)}
                             </p>
                           </div>
                           <div className={`flex-1 px-3 py-2 text-center ${isExpired ? 'bg-red-50' : ''}`}>
@@ -899,10 +898,10 @@ const EmployerDashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Salary Range</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Salary Range ({settings?.currency_code || 'INR'})</label>
                   <input
                     type="text"
-                    placeholder={`e.g. ${getCurrencySymbol(settings?.currency_code || 'INR')}15,000 - ${getCurrencySymbol(settings?.currency_code || 'INR')}20,000`}
+                    placeholder={`e.g. ${settings?.currency_code || 'INR'} 15,000 - ${settings?.currency_code || 'INR'} 20,000`}
                     className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
                     value={formData.salary_range}
                     onChange={(e) => setFormData({...formData, salary_range: e.target.value})}

@@ -28,6 +28,16 @@ const JobList = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [settings, setSettings] = useState(null);
 
+  const formatSalary = (range) => {
+    if (!range) return 'Not Disclosed';
+    const cleanRange = range.trim();
+    if (/^\d/.test(cleanRange)) {
+      const currency = settings?.currency_code || 'INR';
+      return `${currency} ${cleanRange}`;
+    }
+    return cleanRange;
+  };
+
   const resolveLocation = (locationName) => {
     if (!locationName) return '—';
     const loc = locations.find(l => l.name === locationName);
@@ -714,9 +724,9 @@ const JobList = () => {
                     <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3 transition-colors duration-200">
                       <div className="flex items-center gap-1 mb-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Salary</span>
+                        <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Salary ({settings?.currency_code || 'INR'})</span>
                       </div>
-                      <p className="text-sm font-black text-emerald-600 truncate" title={job.salary_range || 'Not Disclosed'}>{job.salary_range || 'Not Disclosed'}</p>
+                      <p className="text-sm font-black text-emerald-600 truncate" title={job.salary_range || 'Not Disclosed'}>{formatSalary(job.salary_range)}</p>
                     </div>
                     {job.age_range && (
                       <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3 transition-colors duration-200">
