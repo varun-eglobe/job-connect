@@ -11,6 +11,8 @@ const AdminDashboard = () => {
     const [verifiedFilter, setVerifiedFilter] = useState('all'); // all, verified, unverified
     const [previewImage, setPreviewImage] = useState(null);
     const [copiedId, setCopiedId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -98,6 +100,15 @@ const AdminDashboard = () => {
         return matchesSearch && matchesApproval && matchesVerified;
     });
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, approvalFilter, verifiedFilter]);
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredEmployers.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredEmployers.length / itemsPerPage);
+
     return (
         <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
             <div className="bg-white rounded-none border border-slate-200 p-8 text-slate-800 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm">
@@ -178,6 +189,7 @@ const AdminDashboard = () => {
 
                 <div className="overflow-x-auto">
                     {can('manage_employers') ? (
+                        <>
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="text-xs uppercase tracking-wider text-slate-400 font-bold bg-slate-50">
@@ -201,7 +213,7 @@ const AdminDashboard = () => {
                                         <td colSpan="4" className="px-6 py-10 text-center text-slate-400 italic">No employers match the selected filters.</td>
                                     </tr>
                                 ) : (
-                                    filteredEmployers.map((emp) => (
+                                    currentItems.map((emp) => (
                                             <tr key={emp.id} className="hover:bg-slate-50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
@@ -333,6 +345,48 @@ const AdminDashboard = () => {
                                 )}
                             </tbody>
                         </table>
+                        {totalPages > 1 && (
+                            <div className="p-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+                                <div className="text-xs text-slate-500 font-bold">
+                                    Showing <span className="text-slate-800">{indexOfFirstItem + 1}</span> to{' '}
+                                    <span className="text-slate-800">{Math.min(indexOfLastItem, filteredEmployers.length)}</span> of{' '}
+                                    <span className="text-slate-800">{filteredEmployers.length}</span> employers
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        disabled={currentPage === 1}
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        className="h-9 px-3 bg-white border border-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-none transition-all hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
+                                    >
+                                        Previous
+                                    </button>
+                                    {Array.from({ length: totalPages }).map((_, idx) => {
+                                        const pageNum = idx + 1;
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-9 h-9 font-black text-xs rounded-none border transition-all cursor-pointer active:scale-95 ${
+                                                    currentPage === pageNum
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                    <button
+                                        disabled={currentPage === totalPages}
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        className="h-9 px-3 bg-white border border-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-none transition-all hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        </>
                     ) : (
                         <div className="p-20 text-center space-y-4">
                             <div className="w-20 h-20 bg-slate-50 rounded-none flex items-center justify-center mx-auto text-slate-300">

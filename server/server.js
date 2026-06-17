@@ -128,8 +128,9 @@ function getPossiblePhoneNumbers(identifier, countryPhoneCode) {
 function generateEmailHtml(appName, logoUrl, subject, text) {
     let bodyContent = text.replace(/\n/g, '<br>');
     
-    // Auto-detect OTP code (4 to 6 digits) and render a premium verification badge
-    const otpMatch = text.match(/\b\d{4,6}\b/);
+    // Auto-detect OTP code (4 to 6 digits) and render a premium verification badge (only for verification/otp related emails)
+    const isOtpEmail = /otp|verification|security|verify|code/i.test(subject) || /otp|verification|security|verify|code/i.test(text);
+    const otpMatch = isOtpEmail ? text.match(/\b\d{4,6}\b/) : null;
     if (otpMatch) {
         const otpCode = otpMatch[0];
         bodyContent = bodyContent.replace(otpCode, `<strong style="color: #4f46e5; font-size: 18px;">${otpCode}</strong>`);
@@ -1071,6 +1072,64 @@ app.post('/api/auth/register/verify-otp', async (req, res) => {
             [name, email || null, phone || null, password, role, role === 'employer' ? company_name : null, address || null, google_map_link || null, gst_number || null, false, dob || null]
         );
 
+        if (role === 'employer') {
+            try {
+                // Fetch all admins and staff who are active and not deleted
+                const [adminRows] = await db.query(
+                    'SELECT name, email, permissions FROM users WHERE (role = "admin" OR role = "staff") AND is_deleted_by_admin = 0'
+                );
+
+                const eligibleAdmins = adminRows.filter(admin => {
+                    const adminEmail = admin.email;
+                    const adminName = admin.name;
+                    if (!adminEmail) return false;
+
+                    // Super Admins automatically have access
+                    if (adminEmail === 'admin@jobconnect.gov.in' || adminName === 'Super Admin') {
+                        return true;
+                    }
+
+                    // Check permissions JSON
+                    let perms = {};
+                    if (typeof admin.permissions === 'string') {
+                        try { perms = JSON.parse(admin.permissions); } catch (e) { perms = {}; }
+                    } else if (admin.permissions) {
+                        perms = admin.permissions;
+                    }
+
+                    return perms.super_admin === true || perms.manage_employers === true;
+                });
+
+                if (eligibleAdmins.length > 0) {
+                    const subject = `New Employer Account Registered: ${company_name}`;
+                    const text = `Hello,
+
+A new employer account has been registered on Job Connect.
+
+Details:
+- Company/Business Name: ${company_name}
+- Contact Person: ${name}
+- Phone: ${phone}
+
+Please log in to the Administrator Control Panel to review and verify this registration request.
+
+Best regards,
+Job Connect System`;
+
+                    // Send email to each eligible admin concurrently without blocking response
+                    Promise.all(eligibleAdmins.map(admin => sendSmtpEmail(admin.email, subject, text)))
+                        .then(() => {
+                            console.log(`Notification emails successfully dispatched to ${eligibleAdmins.length} admins.`);
+                        })
+                        .catch(err => {
+                            console.error('Error sending notification emails to admins:', err);
+                        });
+                }
+            } catch (err) {
+                console.error('Failed to notify admins of new employer registration:', err);
+            }
+        }
+
         res.json({ id: result.insertId, message: 'User registered successfully', role, name, company_name: role === 'employer' ? company_name : null });
     } catch (err) {
         console.error('Registration OTP verification failed:', err);
@@ -1791,9 +1850,8 @@ app.delete('/api/admin/employers/:id', async (req, res) => {
         }
         
         // Soft delete: set is_deleted_by_admin = 1, and alter email/phone to free them up and satisfy unique constraints
-        const timestamp = Math.floor(Date.now() / 1000);
-        const uniqueEmail = rows[0].email ? `deleted_${timestamp}_${rows[0].email}` : null;
-        const uniquePhone = rows[0].phone ? `deleted_${timestamp}_${rows[0].phone}` : null;
+        const uniqueEmail = rows[0].email ? `del_${rows[0].id}_${rows[0].email}`.slice(0, 100) : null;
+        const uniquePhone = rows[0].phone ? `del_${rows[0].id}_${rows[0].phone}`.slice(0, 20) : null;
         
         await db.execute(
             'UPDATE users SET is_deleted_by_admin = 1, email = ?, phone = ? WHERE id = ?',

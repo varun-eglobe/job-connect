@@ -629,10 +629,10 @@ const EmployerDashboard = () => {
                                 }
                               }}
                               className="px-3 h-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer"
-                              title="View Token Applicants"
+                              title={`View Applicants (Total Slots: ${job.token_count || 0})`}
                             >
                               <Users size={12} />
-                              <span>Applicants ({job.applied_count || 0})</span>
+                              <span>Applicants ({job.applied_count || 0} / {job.token_count || 0})</span>
                             </button>
                           )}
                           <Link to={`/jobs/${job.id}`}
@@ -684,6 +684,14 @@ const EmployerDashboard = () => {
                               {formatSalary(job.salary_range)}
                             </p>
                           </div>
+                          {!!job.is_token_based && (
+                            <div className="flex-1 px-3 py-2 text-center border-r border-slate-100 bg-indigo-50/10">
+                              <p className="text-[9px] uppercase tracking-widest text-indigo-500 font-bold leading-none mb-1">Tokens</p>
+                              <p className="text-xs font-black text-indigo-700 leading-none" title={`${job.applied_count || 0} applied of ${job.token_count || 0} total`}>
+                                {job.token_count || 0}
+                              </p>
+                            </div>
+                          )}
                           <div className={`flex-1 px-3 py-2 text-center ${isExpired ? 'bg-red-50' : ''}`}>
                             <p className={`text-[9px] uppercase tracking-widest font-bold leading-none mb-1 ${isExpired ? 'text-red-400' : 'text-slate-400'}`}>
                               {isExpired ? 'Expired' : 'Expires'}
@@ -1173,9 +1181,9 @@ const EmployerDashboard = () => {
             {/* Print Area */}
             <div id="print-schedule-area" className="p-8 overflow-y-auto flex-grow">
 
-              {/* ── Job Info Strip ── */}
+               {/* ── Job Info Strip ── */}
               {selectedJobForApplicants && (
-                <div className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={`mb-5 grid grid-cols-2 ${selectedJobForApplicants.is_token_based ? 'sm:grid-cols-5' : 'sm:grid-cols-4'} gap-3`}>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                     <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-0.5">Business</p>
                     <p className="text-sm font-black text-slate-800 truncate">{profile?.company_name || '—'}</p>
@@ -1192,6 +1200,14 @@ const EmployerDashboard = () => {
                     <p className="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-0.5">Contact Phone</p>
                     <p className="text-sm font-bold text-blue-600 truncate">{selectedJobForApplicants.contact_phone || '—'}</p>
                   </div>
+                  {!!selectedJobForApplicants.is_token_based && (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
+                      <p className="text-[9px] uppercase tracking-widest text-indigo-500 font-bold mb-0.5">Tokens (Used / Total)</p>
+                      <p className="text-sm font-black text-indigo-700 truncate">
+                        {selectedJobForApplicants.applied_count || 0} / {selectedJobForApplicants.token_count || 0}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

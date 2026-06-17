@@ -394,7 +394,7 @@ const JobDetail = () => {
                       <div>
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Interview Slots</div>
                         <div className="font-extrabold text-indigo-700 text-lg">
-                          Token: {Math.max(0, job.token_count - (job.applied_count || 0))} Remaining
+                          Token: {Math.max(0, job.token_count - (job.applied_count || 0))} Remaining of {job.token_count} Total
                         </div>
                       </div>
                       

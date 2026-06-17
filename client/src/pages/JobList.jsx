@@ -757,7 +757,7 @@ const JobList = () => {
                         <p className={`text-sm font-black ${
                           ((job.token_count || 0) - (job.applied_count || 0) > 0) ? 'text-indigo-700' : 'text-rose-500'
                         }`}>
-                          {`${Math.max(0, (job.token_count || 0) - (job.applied_count || 0))} Left`}
+                          {`${Math.max(0, (job.token_count || 0) - (job.applied_count || 0))} Left of ${job.token_count || 0}`}
                         </p>
                       </div>
                     )}
