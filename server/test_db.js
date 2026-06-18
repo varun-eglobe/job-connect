@@ -2,7 +2,8 @@ const mysql = require('mysql2/promise');
 
 async function test() {
     const db = await mysql.createConnection({
-        host: 'localhost',
+        host: '127.0.0.1',
+        port: 3306,
         user: 'root',
         password: '',
         database: 'jobconnect_db'

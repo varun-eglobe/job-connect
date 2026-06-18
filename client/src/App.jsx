@@ -23,6 +23,7 @@ import CSRPartners from './pages/CSRPartners';
 import axios from 'axios';
 import InstallPrompt from './components/InstallPrompt';
 import NetworkStatus from './components/NetworkStatus';
+import DbErrorOverlay from './components/DbErrorOverlay';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -423,11 +424,23 @@ function App() {
   const [initiativeLogo, setInitiativeLogo] = useState('');
   const [poweredLogo, setPoweredLogo] = useState('');
   const [serverError, setServerError] = useState(false);
+  const [dbErrorDetails, setDbErrorDetails] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
   const [fadeSplash, setFadeSplash] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    // Axios Request Interceptor: attach admin identity headers
+    const reqInterceptor = axios.interceptors.request.use(config => {
+      const role = localStorage.getItem('role');
+      if (role === 'admin') {
+        config.headers['x-admin-id']    = localStorage.getItem('user_id') || '';
+        config.headers['x-admin-name']  = localStorage.getItem('name') || '';
+        config.headers['x-admin-email'] = localStorage.getItem('email') || '';
+      }
+      return config;
+    });
+
     // Axios Global Interceptor for Server Errors
     const interceptor = axios.interceptors.response.use(
       response => {
@@ -437,6 +450,8 @@ function App() {
       error => {
         if (!error.response || error.code === 'ERR_NETWORK') {
           setServerError(true);
+        } else if (error.response?.status === 503 && error.response?.data?.code === 'DB_CONNECTION_ERROR') {
+          setDbErrorDetails(error.response.data.details || {});
         }
         return Promise.reject(error);
       }
@@ -507,16 +522,42 @@ function App() {
     };
     window.addEventListener('brandingUpdate', handleManualUpdate);
 
+    // Frontend health poller – checks every 5s independent of component requests
+    const healthPoller = setInterval(async () => {
+      try {
+        const res = await axios.get('/api/health', { _skipDbCheck: true });
+        if (res.data?.database === 'connected') {
+          setDbErrorDetails(null);
+        } else {
+          setDbErrorDetails(res.data?.details || {});
+        }
+      } catch (err) {
+        const data = err.response?.data;
+        if (err.response?.status === 503) {
+          setDbErrorDetails(data?.details || { message: data?.error || 'Database offline' });
+        }
+        // If server is fully down (ERR_NETWORK), serverError handles it
+      }
+    }, 5000);
+
     return () => {
+      axios.interceptors.request.eject(reqInterceptor);
       axios.interceptors.response.eject(interceptor);
       clearInterval(progressInterval);
+      clearInterval(healthPoller);
       window.removeEventListener('brandingUpdate', handleManualUpdate);
     };
   }, []);
 
+  const handleDbRetry = () => {
+    setDbErrorDetails(null);
+    window.location.reload();
+  };
+
   return (
     <Router>
       <ScrollToTop />
+      {dbErrorDetails && <DbErrorOverlay details={dbErrorDetails} onRetry={handleDbRetry} />}
       {showSplash && <SplashScreen isFading={fadeSplash} progress={progress} />}
       <div className="min-h-screen bg-slate-50 flex flex-col pb-20 xl:pb-0">
         <Navigation appName={appName} logoUrl={logoUrl} />

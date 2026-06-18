@@ -2,6 +2,60 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 require('dotenv').config();
+
+let dbError = null;
+
+async function checkDbConnection() {
+    try {
+        const connection = await db.getConnection();
+        connection.release();
+        dbError = null;
+        console.log("Database connection test: SUCCESS");
+    } catch (err) {
+        dbError = err;
+        console.error("Database connection test: FAILED");
+        console.error(err);
+    }
+}
+checkDbConnection();
+
+// Create admin_activity_log table if it doesn't exist
+(async () => {
+    try {
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS admin_activity_log (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT,
+                admin_name VARCHAR(255),
+                admin_email VARCHAR(255),
+                action VARCHAR(100),
+                target_type VARCHAR(50),
+                target_id INT,
+                target_label VARCHAR(255),
+                ip_address VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+    } catch (err) {
+        console.error('Failed to create admin_activity_log table:', err.message);
+    }
+})();
+
+// Helper: log an admin action
+async function logActivity(req, action, targetType, targetId, targetLabel) {
+    try {
+        const adminId   = req.headers['x-admin-id']   || null;
+        const adminName = req.headers['x-admin-name'] || 'Unknown';
+        const adminEmail= req.headers['x-admin-email']|| null;
+        const ip = req.headers['x-forwarded-for'] || req.ip || null;
+        await db.query(
+            'INSERT INTO admin_activity_log (admin_id, admin_name, admin_email, action, target_type, target_id, target_label, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [adminId, adminName, adminEmail, action, targetType, targetId, targetLabel, ip]
+        );
+    } catch (err) {
+        console.error('logActivity error:', err.message);
+    }
+}
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -231,7 +285,6 @@ function generateEmailHtml(appName, logoUrl, subject, text) {
     </div>
     <div class="footer">
       <p>This is an automated security transmission from <strong>${appName}</strong>.</p>
-      <p>If you did not initiate this request, please contact platform support.</p>
       <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
     </div>
   </div>
@@ -314,6 +367,22 @@ async function generateAndSendOtp(phone, reason) {
     return { otpCode: '9999', sent: false };
 }
 
+// Returns true if real comms (SMTP or Twilio) are active — disables dev 9999 bypass
+async function isRealModeActive() {
+    try {
+        const [rows] = await db.query(
+            'SELECT smtp_enabled, smtp_host, smtp_user, twilio_enabled, twilio_sid FROM site_settings WHERE id = 1'
+        );
+        const c = rows && rows[0];
+        if (!c) return false;
+        const smtpActive = c.smtp_enabled === 1 && !!c.smtp_host && !!c.smtp_user;
+        const twilioActive = c.twilio_enabled === 1 && !!c.twilio_sid;
+        return smtpActive || twilioActive;
+    } catch {
+        return false;
+    }
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = path.resolve(__dirname, '../client/public/logos');
@@ -345,10 +414,82 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Periodic database health check every 5 seconds
+const DB_CHECK_INTERVAL_MS = 5000;
+let dbCheckTimer = setInterval(async () => {
+    try {
+        const connection = await db.getConnection();
+        connection.release();
+        if (dbError) {
+            console.log("Database connection test: SUCCESS (recovered)");
+        }
+        dbError = null;
+    } catch (err) {
+        if (!dbError) {
+            console.error("Database connection test: FAILED (went offline)");
+        }
+        dbError = err;
+    }
+}, DB_CHECK_INTERVAL_MS);
+dbCheckTimer.unref(); // Don't block process exit
+
+// Database offline check middleware
+app.use((req, res, next) => {
+    // Skip for health check endpoint and non-api routes
+    if (req.path === '/api/health' || !req.path.startsWith('/api')) {
+        return next();
+    }
+    if (dbError) {
+        return res.status(503).json({
+            error: 'Database connection is offline.',
+            code: 'DB_CONNECTION_ERROR',
+            details: {
+                message: dbError.message,
+                host: process.env.DB_HOST || '127.0.0.1',
+                port: process.env.DB_PORT || 3306,
+                database: process.env.DB_NAME || 'jobconnect_db'
+            }
+        });
+    }
+    next();
+});
+
 app.use('/logos', express.static(path.resolve(__dirname, '../client/public/logos')));
 
 // Health Check
-app.get('/api/health', (req, res) => res.json({ status: 'Server is LIVE', version: '1.3' }));
+app.get('/api/health', async (req, res) => {
+    try {
+        const connection = await db.getConnection();
+        connection.release();
+        dbError = null;
+        res.json({
+            status: 'healthy',
+            database: 'connected',
+            version: '1.3',
+            details: {
+                host: process.env.DB_HOST || '127.0.0.1',
+                port: process.env.DB_PORT || 3306,
+                database: process.env.DB_NAME || 'jobconnect_db'
+            }
+        });
+    } catch (err) {
+        dbError = err;
+        res.status(503).json({
+            status: 'unhealthy',
+            database: 'disconnected',
+            code: 'DB_CONNECTION_ERROR',
+            version: '1.3',
+            error: err.message,
+            details: {
+                message: err.message,
+                host: process.env.DB_HOST || '127.0.0.1',
+                port: process.env.DB_PORT || 3306,
+                database: process.env.DB_NAME || 'jobconnect_db'
+            }
+        });
+    }
+});
 
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`, req.body);
@@ -1045,7 +1186,9 @@ app.post('/api/auth/register/verify-otp', async (req, res) => {
             return res.status(400).json({ error: 'OTP has expired' });
         }
 
-        if (otp_code !== session.otp && otp_code !== '9999') {
+        const realMode = await isRealModeActive();
+        const devBypassAllowed = !realMode && otp_code === '9999';
+        if (otp_code !== session.otp && !devBypassAllowed) {
             return res.status(401).json({ error: 'Invalid OTP code' });
         }
 
@@ -1295,7 +1438,9 @@ app.post('/api/auth/login/verify-otp', async (req, res) => {
             return res.status(400).json({ error: 'OTP expired' });
         }
 
-        if (otp_code !== session.otp && otp_code !== '9999') {
+        const realMode1 = await isRealModeActive();
+        const devBypass1 = !realMode1 && otp_code === '9999';
+        if (otp_code !== session.otp && !devBypass1) {
             return res.status(401).json({ error: 'Invalid OTP code' });
         }
 
@@ -1373,7 +1518,9 @@ app.post('/api/auth/phone-verify/verify-otp', async (req, res) => {
             pendingPhoneVerifications.delete(transaction_token);
             return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
         }
-        if (otp_code !== session.otp && otp_code !== '9999') {
+        const realMode2 = await isRealModeActive();
+        const devBypass2 = !realMode2 && otp_code === '9999';
+        if (otp_code !== session.otp && !devBypass2) {
             return res.status(401).json({ error: 'Invalid OTP code' });
         }
 
@@ -1516,7 +1663,9 @@ app.post('/api/auth/reset-password', async (req, res) => {
             return res.status(400).json({ error: 'OTP has expired. Please try again.' });
         }
 
-        if (otp_code !== session.otp && otp_code !== '9999') {
+        const realMode3 = await isRealModeActive();
+        const devBypass3 = !realMode3 && otp_code === '9999';
+        if (otp_code !== session.otp && !devBypass3) {
             return res.status(400).json({ error: 'Invalid verification code' });
         }
 
@@ -1814,6 +1963,9 @@ app.put('/api/admin/approve/:id', async (req, res) => {
         const { id } = req.params;
         const { is_approved } = req.body;
         await db.execute('UPDATE users SET is_approved = ? WHERE id = ? AND role = "employer"', [is_approved, id]);
+        const [rows] = await db.execute('SELECT company_name FROM users WHERE id = ?', [id]);
+        const label = rows[0]?.company_name || `Employer #${id}`;
+        logActivity(req, is_approved ? 'APPROVED_EMPLOYER' : 'REJECTED_EMPLOYER', 'employer', id, label);
         res.json({ success: true, message: 'Approval status updated' });
     } catch (err) {
         console.error(err);
@@ -1825,15 +1977,14 @@ app.put('/api/admin/verify/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { is_verified } = req.body;
-
-        // Fetch user's gst_number to determine is_gst_verified value
-        const [users] = await db.query('SELECT gst_number FROM users WHERE id = ?', [id]);
+        const [users] = await db.query('SELECT gst_number, company_name FROM users WHERE id = ?', [id]);
         const gst_number = users.length > 0 ? users[0].gst_number : null;
-
+        const label = users[0]?.company_name || `Employer #${id}`;
         await db.execute(
             'UPDATE users SET is_verified = ?, is_gst_verified = ? WHERE id = ? AND role = "employer"',
             [is_verified ? 1 : 0, is_verified && gst_number ? 1 : 0, id]
         );
+        logActivity(req, is_verified ? 'VERIFIED_EMPLOYER' : 'UNVERIFIED_EMPLOYER', 'employer', id, label);
         res.json({ success: true, message: 'Status updated' });
     } catch (err) {
         console.error(err);
@@ -1844,19 +1995,18 @@ app.put('/api/admin/verify/:id', async (req, res) => {
 app.delete('/api/admin/employers/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const [rows] = await db.execute('SELECT id, email, phone FROM users WHERE id = ? AND role = "employer"', [id]);
+        const [rows] = await db.execute('SELECT id, email, phone, company_name FROM users WHERE id = ? AND role = "employer"', [id]);
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Employer not found' });
         }
-        
-        // Soft delete: set is_deleted_by_admin = 1, and alter email/phone to free them up and satisfy unique constraints
+        const label = rows[0].company_name || rows[0].email || `Employer #${id}`;
         const uniqueEmail = rows[0].email ? `del_${rows[0].id}_${rows[0].email}`.slice(0, 100) : null;
         const uniquePhone = rows[0].phone ? `del_${rows[0].id}_${rows[0].phone}`.slice(0, 20) : null;
-        
         await db.execute(
             'UPDATE users SET is_deleted_by_admin = 1, email = ?, phone = ? WHERE id = ?',
             [uniqueEmail, uniquePhone, id]
         );
+        logActivity(req, 'DELETED_EMPLOYER', 'employer', id, label);
         res.json({ success: true, message: 'Employer registration deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -1889,6 +2039,7 @@ app.post('/api/admin/users', async (req, res) => {
             'INSERT INTO users (name, email, password, role, permissions, is_verified) VALUES (?, ?, ?, ?, ?, ?)',
             [trimmedName, email, password, role || 'admin', JSON.stringify(permissions || {}), true]
         );
+        logActivity(req, 'CREATED_ADMIN_USER', 'admin_user', result.insertId, `${trimmedName} (${email})`);
         res.json({ id: result.insertId, message: 'Admin user created successfully' });
     } catch (err) {
         res.status(500).json({ error: 'Email already exists' });
@@ -1909,16 +2060,14 @@ app.put('/api/admin/users/:id', async (req, res) => {
         }
         let query = 'UPDATE users SET name = ?, email = ?, permissions = ?, role = ?';
         const params = [trimmedName, email, JSON.stringify(permissions), role || 'admin'];
-        
         if (password) {
             query += ', password = ?';
             params.push(password);
         }
-        
         query += ' WHERE id = ?';
         params.push(id);
-        
         await db.execute(query, params);
+        logActivity(req, 'UPDATED_ADMIN_USER', 'admin_user', id, `${trimmedName} (${email})`);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Update failed' });
@@ -1928,14 +2077,32 @@ app.put('/api/admin/users/:id', async (req, res) => {
 app.delete('/api/admin/users/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        // Don't allow deleting the super admin
-        const [user] = await db.execute('SELECT email FROM users WHERE id = ?', [id]);
+        const [user] = await db.execute('SELECT email, name FROM users WHERE id = ?', [id]);
         if (user[0]?.email === 'admin@jobconnect.gov.in') return res.status(403).json({ error: 'Cannot delete Super Admin' });
-        
+        const label = user[0] ? `${user[0].name} (${user[0].email})` : `Admin #${id}`;
         await db.execute('DELETE FROM users WHERE id = ?', [id]);
+        logActivity(req, 'DELETED_ADMIN_USER', 'admin_user', id, label);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Delete failed' });
+    }
+});
+
+// Activity Log — Super Admin Only
+app.get('/api/admin/activity-log', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 30;
+        const offset = (page - 1) * limit;
+        const [rows] = await db.query(
+            'SELECT * FROM admin_activity_log ORDER BY created_at DESC LIMIT ? OFFSET ?',
+            [limit, offset]
+        );
+        const [[{ total }]] = await db.query('SELECT COUNT(*) as total FROM admin_activity_log');
+        res.json({ logs: rows, total, totalPages: Math.ceil(total / limit), currentPage: page });
+    } catch (err) {
+        console.error('Activity log fetch error:', err);
+        res.status(500).json({ error: 'Failed to fetch activity log' });
     }
 });
 // CSR Partners Management

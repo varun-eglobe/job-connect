@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Settings, MapPin, Plus, X, ArrowLeft, Layout, FileText, Save, Trash2, Edit3, Globe, Lock, ChevronRight, HelpCircle, Users, ShieldCheck, Mail, Key, GripVertical, ChevronDown, MessageSquare, Building2, Eye, EyeOff, Search, Send } from 'lucide-react';
+import { Settings, MapPin, Plus, X, ArrowLeft, Layout, FileText, Save, Trash2, Edit3, Globe, Lock, ChevronRight, HelpCircle, Users, ShieldCheck, Mail, Key, GripVertical, ChevronDown, MessageSquare, Building2, Eye, EyeOff, Search, Send, Clock, Activity } from 'lucide-react';
 
 // Custom Wrapper for Quill to handle React 19 stability via CDN
 const WYSIWYG = ({ value, onChange, placeholder }) => {
@@ -118,6 +118,12 @@ const AdminSettings = () => {
     const [showUserModal, setShowUserModal] = useState(false);
     const [editingUserId, setEditingUserId] = useState(null);
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'admin', permissions: {} });
+
+    // Activity Log States
+    const [activityLogs, setActivityLogs] = useState([]);
+    const [activityPage, setActivityPage] = useState(1);
+    const [activityTotalPages, setActivityTotalPages] = useState(1);
+    const [activityLoading, setActivityLoading] = useState(false);
     const userPermissionsRaw = localStorage.getItem('permissions');
     const userEmail = localStorage.getItem('email');
     const userName = localStorage.getItem('name');
@@ -531,7 +537,22 @@ const AdminSettings = () => {
     useEffect(() => {
         if (activeTab === 'testimonials') fetchTestimonials();
         if (activeTab === 'csr') fetchCsrPartners();
+        if (activeTab === 'activity_log') fetchActivityLog(1);
     }, [activeTab]);
+
+    const fetchActivityLog = async (page = 1) => {
+        setActivityLoading(true);
+        try {
+            const res = await axios.get(`/api/admin/activity-log?page=${page}&limit=25`);
+            setActivityLogs(res.data.logs || []);
+            setActivityTotalPages(res.data.totalPages || 1);
+            setActivityPage(page);
+        } catch (err) {
+            console.error('Activity log fetch failed', err);
+        } finally {
+            setActivityLoading(false);
+        }
+    };
 
     const togglePermission = (key) => {
         setNewUser(prev => ({
@@ -550,6 +571,7 @@ const AdminSettings = () => {
                 items: [
                     { id: 'users', label: 'User Manager', icon: Users, permission: 'manage_users' },
                     { id: 'security', label: 'Security & Account', icon: Lock, permission: null },
+                    ...(isSuperAdmin ? [{ id: 'activity_log', label: 'Activity Log', icon: Clock, permission: null }] : []),
                 ]
             },
             {
@@ -2079,6 +2101,79 @@ const AdminSettings = () => {
                                 </div>
                             </div>
                         )}
+
+                        {activeTab === 'activity_log' && isSuperAdmin && (() => {
+                            const actionMeta = {
+                                APPROVED_EMPLOYER:   { label: 'Approved Employer',    color: 'bg-green-100 text-green-700' },
+                                REJECTED_EMPLOYER:   { label: 'Rejected Employer',    color: 'bg-red-100 text-red-700' },
+                                VERIFIED_EMPLOYER:   { label: 'Verified Employer',    color: 'bg-blue-100 text-blue-700' },
+                                UNVERIFIED_EMPLOYER: { label: 'Unverified Employer',  color: 'bg-amber-100 text-amber-700' },
+                                DELETED_EMPLOYER:    { label: 'Deleted Employer',     color: 'bg-red-100 text-red-700' },
+                                CREATED_ADMIN_USER:  { label: 'Created Admin User',   color: 'bg-indigo-100 text-indigo-700' },
+                                UPDATED_ADMIN_USER:  { label: 'Updated Admin User',   color: 'bg-slate-100 text-slate-700' },
+                                DELETED_ADMIN_USER:  { label: 'Deleted Admin User',   color: 'bg-red-100 text-red-700' },
+                            };
+                            return (
+                                <div className="animate-in fade-in duration-500">
+                                    <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                        <div>
+                                            <h2 className="text-xl font-black text-slate-800">Activity Log</h2>
+                                            <p className="text-sm text-slate-500">All actions performed by admin and staff users.</p>
+                                        </div>
+                                        <button onClick={() => fetchActivityLog(activityPage)} className="h-10 px-5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold text-sm flex items-center gap-2 transition-all">
+                                            <Clock size={14} /> Refresh
+                                        </button>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        {activityLoading ? (
+                                            <div className="py-20 text-center text-slate-400"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" /></div>
+                                        ) : activityLogs.length === 0 ? (
+                                            <div className="py-20 text-center text-slate-400 italic">No activity recorded yet.</div>
+                                        ) : (
+                                            <table className="w-full text-left">
+                                                <thead>
+                                                    <tr className="bg-slate-50/80 border-y border-slate-100">
+                                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Date & Time</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Admin</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Action</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Target</th>
+                                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">IP Address</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {activityLogs.map(log => {
+                                                        const meta = actionMeta[log.action] || { label: log.action, color: 'bg-slate-100 text-slate-600' };
+                                                        return (
+                                                            <tr key={log.id} className="hover:bg-slate-50/50 transition-all">
+                                                                <td className="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">
+                                                                    {new Date(log.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="font-bold text-slate-800 text-sm">{log.admin_name || '—'}</div>
+                                                                    <div className="text-[11px] text-slate-400">{log.admin_email || ''}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-black ${meta.color}`}>{meta.label}</span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-sm text-slate-600 max-w-[200px] truncate">{log.target_label || `#${log.target_id}`}</td>
+                                                                <td className="px-6 py-4 text-xs text-slate-400 font-mono">{log.ip_address || '—'}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        )}
+                                    </div>
+                                    {activityTotalPages > 1 && (
+                                        <div className="flex justify-center items-center gap-3 p-6 border-t border-slate-100">
+                                            <button onClick={() => fetchActivityLog(activityPage - 1)} disabled={activityPage === 1} className="h-9 px-4 rounded-full bg-slate-100 text-slate-600 font-bold text-sm disabled:opacity-40 hover:bg-slate-200 transition-all">← Prev</button>
+                                            <span className="text-sm font-bold text-slate-500">Page {activityPage} of {activityTotalPages}</span>
+                                            <button onClick={() => fetchActivityLog(activityPage + 1)} disabled={activityPage === activityTotalPages} className="h-9 px-4 rounded-full bg-slate-100 text-slate-600 font-bold text-sm disabled:opacity-40 hover:bg-slate-200 transition-all">Next →</button>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                         {activeTab === 'domains' && can('manage_domains') && (
                             <div className="animate-in fade-in duration-500 font-sans">
