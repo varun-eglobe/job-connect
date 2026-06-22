@@ -9,7 +9,7 @@ import {
   X, 
   SlidersHorizontal, 
   ArrowUpDown, 
-  Mail, 
+  Phone, 
   RotateCcw,
   ShieldCheck,
   HelpCircle
@@ -276,7 +276,7 @@ const CompanyList = () => {
                   <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                     <th className="py-5 px-8">Company Name</th>
                     <th className="py-5 px-6">Verification</th>
-                    <th className="py-5 px-6">Contact Email</th>
+                    <th className="py-5 px-6">Contact Phone</th>
                     <th className="py-5 px-6 text-center">Active Openings</th>
                     <th className="py-5 px-8 text-right">Actions</th>
                   </tr>
@@ -314,11 +314,11 @@ const CompanyList = () => {
                         )}
                       </td>
 
-                      {/* Contact Email */}
+                      {/* Contact Phone */}
                       <td className="py-4 px-6">
                         <span className="flex items-center gap-2 text-slate-500 text-sm font-semibold select-all">
-                          <Mail size={14} className="text-slate-300 shrink-0" />
-                          {company.email || '—'}
+                          <Phone size={14} className="text-slate-300 shrink-0" />
+                          {company.phone || '—'}
                         </span>
                       </td>
 
@@ -366,7 +366,7 @@ const CompanyList = () => {
                         >
                           {company.company_name}
                         </Link>
-                        <span className="text-[10px] text-slate-400 font-semibold select-all block mt-0.5">{company.email || '—'}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold select-all block mt-0.5">{company.phone || '—'}</span>
                       </div>
                     </div>
                   </div>

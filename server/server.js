@@ -1040,14 +1040,14 @@ app.get('/api/employers', async (req, res) => {
     try {
         const { search } = req.query;
         let query = `
-            SELECT u.id, u.company_name, u.email, u.is_verified, u.is_gst_verified, COUNT(j.id) as job_count
+            SELECT u.id, u.company_name, u.email, u.phone, u.is_verified, u.is_gst_verified, COUNT(j.id) as job_count
             FROM users u 
             LEFT JOIN jobs j ON u.id = j.employer_id AND j.status = 'active'
             WHERE u.role = 'employer' AND u.is_approved = 1 AND u.is_deleted_by_admin = 0
         `;
         const params = [];
         if (search) {
-            query += ` AND (LOWER(u.company_name) LIKE ? OR LOWER(u.email) LIKE ?)`;
+            query += ` AND (LOWER(u.company_name) LIKE ? OR u.phone LIKE ?)`;
             params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
         }
         query += ` GROUP BY u.id`;

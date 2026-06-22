@@ -17,6 +17,16 @@ const formatDateSafely = (dateStr) => {
   return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
 };
 
+const getLocalDateString = (dateInput) => {
+  if (!dateInput) return '';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const regenerateSlots = (count, split, existingSlots = [], appliedCount = 0) => {
   if (count <= 0 || split <= 0) return [];
   const slots = [];
@@ -92,7 +102,7 @@ const EmployerDashboard = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    location: 'Pattom',
+    location: '',
     job_type: 'Full-time',
     vacancies_count: 1,
     expiry_date: '',
@@ -197,10 +207,21 @@ const EmployerDashboard = () => {
 
   const handlePostJob = async (e) => {
     e.preventDefault();
-    if (formData.expiry_date && formData.expiry_date < getTodayString()) {
-      setMessage({ type: 'error', text: 'Expiry date cannot be in the past.' });
-      return;
+    
+    const parentLocObj = locations.find(l => l.name === parentName && !l.parent_id);
+    const subPlacesForParent = parentLocObj ? locations.filter(l => l.parent_id === parentLocObj.id) : [];
+    const hasSubplaces = subPlacesForParent.length > 0;
+    
+    if (!formData.location || formData.location === parentName) {
+      if (hasSubplaces) {
+        setMessage({ type: 'error', text: 'Please select a specific Area / Sub-place.' });
+        return;
+      } else if (!formData.location) {
+        setMessage({ type: 'error', text: 'Please select a Region / District.' });
+        return;
+      }
     }
+
     if (formData.is_token_based) {
       if (!formData.token_slots || formData.token_slots.length === 0) {
         setMessage({ type: 'error', text: 'Please generate and configure token slot times.' });
@@ -218,6 +239,20 @@ const EmployerDashboard = () => {
         return;
       }
     }
+
+    let finalExpiryDate = formData.expiry_date;
+    if (formData.is_token_based && formData.token_slots && formData.token_slots.length > 0) {
+      const lastSlot = formData.token_slots[formData.token_slots.length - 1];
+      if (lastSlot && lastSlot.date) {
+        finalExpiryDate = lastSlot.date;
+      }
+    }
+
+    if (!formData.is_token_based && finalExpiryDate && finalExpiryDate < getTodayString()) {
+      setMessage({ type: 'error', text: 'Expiry date cannot be in the past.' });
+      return;
+    }
+
     if (editingJobId) {
       const currentJob = jobs.find(j => j.id === editingJobId);
       if (currentJob) {
@@ -250,15 +285,17 @@ const EmployerDashboard = () => {
       if (editingJobId) {
         await axios.put(`/api/jobs/${editingJobId}`, {
           ...formData,
+          expiry_date: finalExpiryDate,
           employer_id: employerId
         });
-        setMessage({ type: 'success', text: 'Job updated successfully!' });
+        alert('Job updated successfully!');
       } else {
         await axios.post('/api/jobs', {
           ...formData,
+          expiry_date: finalExpiryDate,
           employer_id: employerId
         });
-        setMessage({ type: 'success', text: 'Job posted successfully!' });
+        alert('Job posted successfully!');
       }
       
       setShowPostingForm(false);
@@ -266,7 +303,7 @@ const EmployerDashboard = () => {
       setFormData({
         title: '',
         description: '',
-        location: 'Pattom',
+        location: '',
         job_type: 'Full-time',
         vacancies_count: 1,
         expiry_date: '',
@@ -295,7 +332,8 @@ const EmployerDashboard = () => {
   };
 
   const handleEditClick = (job) => {
-    const formattedDate = job.expiry_date ? new Date(String(job.expiry_date).replace(' ', 'T')).toISOString().split('T')[0] : '';
+    setMessage('');
+    const formattedDate = getLocalDateString(job.expiry_date);
     let parsedSlots = [];
     if (job.token_slots) {
       try {
@@ -338,7 +376,7 @@ const EmployerDashboard = () => {
     setFormData({
       title: '',
       description: '',
-      location: locations.length > 0 ? locations[0].name : 'Pattom',
+      location: '',
       job_type: 'Full-time',
       vacancies_count: 1,
       expiry_date: '',
@@ -561,7 +599,7 @@ const EmployerDashboard = () => {
           ) : (
             <div className="flex flex-col gap-4">
               {jobs.map(job => {
-                const isExpired = job.expiry_date && new Date(job.expiry_date).toISOString().split('T')[0] < new Date().toISOString().split('T')[0];
+                const isExpired = job.expiry_date && getLocalDateString(job.expiry_date) < getTodayString();
                 return (
                   <div key={job.id} className={`rounded-2xl border overflow-hidden transition-all duration-200 ${isExpired ? 'border-red-100 bg-red-50/30' : 'border-slate-100 bg-white hover:border-blue-100 hover:shadow-md hover:shadow-blue-500/5'}`}>
                     
@@ -765,7 +803,7 @@ const EmployerDashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Job Title</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Job Title <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     required
@@ -777,7 +815,7 @@ const EmployerDashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Description</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Description <span className="text-red-500">*</span></label>
                   <textarea
                     required
                     rows="3"
@@ -790,7 +828,7 @@ const EmployerDashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Vacancies</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Vacancies <span className="text-red-500">*</span></label>
                     <input
                       type="number"
                       min="1"
@@ -801,13 +839,19 @@ const EmployerDashboard = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Expiry Date</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">
+                      Expiry Date {!formData.is_token_based && <span className="text-red-500">*</span>}
+                    </label>
                     <input
                       type="date"
-                      required
+                      required={!formData.is_token_based}
+                      disabled={formData.is_token_based}
                       min={getTodayString()}
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
-                      value={formData.expiry_date}
+                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                      value={formData.is_token_based 
+                        ? (formData.token_slots && formData.token_slots.length > 0 ? formData.token_slots[formData.token_slots.length - 1].date : '') 
+                        : formData.expiry_date
+                      }
                       onChange={(e) => {
                         const val = e.target.value;
                         if (val && val < getTodayString()) {
@@ -819,6 +863,11 @@ const EmployerDashboard = () => {
                         }
                       }}
                     />
+                    {formData.is_token_based && (
+                      <span className="block text-[10px] text-blue-600 font-medium mt-1">
+                        Automatically set to the last interview date (Token Slot range).
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -847,7 +896,7 @@ const EmployerDashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Person</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Person <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       required
@@ -871,7 +920,7 @@ const EmployerDashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Region / District</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Region / District <span className="text-red-500">*</span></label>
                     <select
                       className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
                       value={parentName}
@@ -887,7 +936,7 @@ const EmployerDashboard = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Area / Sub-place</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Area / Sub-place {parentName && subPlaces.length > 0 && <span className="text-red-500">*</span>}</label>
                     <select
                       className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60 disabled:bg-slate-50/50 disabled:cursor-not-allowed"
                       value={areaName}
