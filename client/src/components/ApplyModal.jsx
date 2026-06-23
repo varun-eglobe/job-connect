@@ -30,19 +30,24 @@ export default function ApplyModal({ isOpen, onClose, job, userId, settings, onS
       if (userId) {
         axios.get(`/api/users/${userId}`)
           .then(res => {
-            const phone = res.data.phone ? res.data.phone.replace(/^\+/, '') : '';
+            const countryCode = settings?.country_phone_code || '91';
+            const rawPhone = res.data.phone ? res.data.phone.replace(/^\+/, '') : '';
+            let formattedPhone = rawPhone;
+            if (rawPhone.startsWith(countryCode)) {
+              formattedPhone = rawPhone.slice(countryCode.length);
+            }
             setApplyFormData({
               candidate_name: res.data.name || '',
-              candidate_phone: phone
+              candidate_phone: formattedPhone
             });
-            setOriginalPhone(phone);
+            setOriginalPhone(formattedPhone);
           })
           .catch(err => {
             console.error("Error fetching user profile in modal", err);
           });
       }
     }
-  }, [isOpen, userId]);
+  }, [isOpen, userId, settings]);
 
   if (!isOpen || !job) return null;
 
@@ -56,8 +61,14 @@ export default function ApplyModal({ isOpen, onClose, job, userId, settings, onS
     setOtpLoading(true);
     setOtpError('');
     try {
+      const countryCode = settings?.country_phone_code || '91';
+      let cleanPhone = applyFormData.candidate_phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
+      const fullPhone = '+' + countryCode + cleanPhone;
       const res = await axios.post('/api/auth/phone-verify/send-otp', {
-        phone: applyFormData.candidate_phone
+        phone: fullPhone
       });
       setOtpTransactionToken(res.data.transaction_token);
       setOtpStep(true);
@@ -100,15 +111,21 @@ export default function ApplyModal({ isOpen, onClose, job, userId, settings, onS
     setApplyLoading(true);
     setApplyError('');
     try {
+      const countryCode = settings?.country_phone_code || '91';
+      let cleanPhone = applyFormData.candidate_phone.replace(/\D/g, '');
+      if (cleanPhone.startsWith(countryCode)) {
+        cleanPhone = cleanPhone.slice(countryCode.length);
+      }
+      const fullPhone = '+' + countryCode + cleanPhone;
       const response = await axios.post(`/api/jobs/${job.id}/apply`, {
         candidate_id: userId,
         candidate_name: applyFormData.candidate_name,
-        candidate_phone: applyFormData.candidate_phone
+        candidate_phone: fullPhone
       });
       onSuccess({
         ...response.data,
         candidate_name: applyFormData.candidate_name,
-        candidate_phone: applyFormData.candidate_phone
+        candidate_phone: fullPhone
       });
       onClose();
     } catch (err) {
@@ -176,13 +193,17 @@ export default function ApplyModal({ isOpen, onClose, job, userId, settings, onS
 
               <div>
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Contact Phone Number</label>
-                <div className="relative">
+                <div className="relative flex items-center">
+                  <div className="absolute left-4 text-slate-500 font-bold select-none text-base border-r border-slate-200 pr-3 h-6 flex items-center">
+                    +{settings?.country_phone_code || '91'}
+                  </div>
                   <input
                     type="tel"
                     required
                     placeholder="Enter phone number"
-                    className={`w-full h-12 px-4 rounded-xl border outline-none font-semibold text-slate-800 transition-all ${
-                      phoneVerified ? 'border-emerald-400 bg-emerald-50/30 pr-10 focus:ring-2 focus:ring-emerald-100' :
+                    style={{ paddingLeft: `${(settings?.country_phone_code || '91').length * 9 + 52}px` }}
+                    className={`w-full h-12 pr-10 rounded-xl border outline-none font-bold text-slate-800 transition-all ${
+                      phoneVerified ? 'border-emerald-400 bg-emerald-50/30 focus:ring-2 focus:ring-emerald-100' :
                       isPhoneChanged() ? 'border-amber-400 bg-amber-50/20 focus:ring-2 focus:ring-amber-100' :
                       'border-slate-200 focus:ring-2 focus:ring-blue-100'
                     }`}
@@ -232,7 +253,7 @@ export default function ApplyModal({ isOpen, onClose, job, userId, settings, onS
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
                 <p className="text-[11px] text-blue-800 font-bold flex items-center gap-1">
                   <ShieldCheck size={13} className="text-blue-600" />
-                  Enter the OTP sent to +{applyFormData.candidate_phone}
+                  Enter the OTP sent to +{settings?.country_phone_code || '91'}{applyFormData.candidate_phone}
                 </p>
                 <div className="flex gap-2">
                   <input

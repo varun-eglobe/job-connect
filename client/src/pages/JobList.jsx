@@ -409,9 +409,7 @@ const JobList = () => {
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm">
-                <Filter size={20} />
-              </div>
+              <Filter size={20} className="text-blue-600 shrink-0" />
               {companyFilter ? `Jobs at "${companyFilter}"` : searchFilter ? `Search: "${searchFilter}"` : 'Job Opportunities'} 
               <span className="text-blue-600 font-medium ml-1">({total})</span>
             </h2>

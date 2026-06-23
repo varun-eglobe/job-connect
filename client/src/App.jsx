@@ -82,7 +82,7 @@ function Navigation({ appName, logoUrl }) {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="text-xl font-bold text-blue-600 flex items-center gap-2 group" onClick={() => setIsOpen(false)}>
           {logoUrl ? (
-            <img src={logoUrl} alt={appName} className="h-10 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" />
+            <img src={logoUrl} alt={appName} className="h-8 md:h-8 w-auto object-contain transition-transform group-hover:scale-105" />
           ) : (
             <>
               <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
@@ -217,7 +217,7 @@ function Navigation({ appName, logoUrl }) {
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <Link to="/" className="text-xl font-bold text-blue-600 flex items-center gap-2" onClick={() => setIsOpen(false)}>
             {logoUrl ? (
-              <img src={logoUrl} alt={appName} className="h-10 w-auto object-contain" />
+              <img src={logoUrl} alt={appName} className="h-8 w-auto object-contain" />
             ) : (
               <>
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">

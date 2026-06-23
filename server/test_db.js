@@ -9,13 +9,9 @@ async function test() {
         database: 'jobconnect_db'
     });
     
-    const newText = "TEST_VALUE_" + Date.now();
-    console.log("Setting value to:", newText);
-    
-    await db.query('UPDATE site_settings SET pdf_footer_text = ? WHERE id = 1', [newText]);
-    
+    console.log("Testing database connection...");
     const [rows] = await db.query('SELECT pdf_footer_text FROM site_settings WHERE id = 1');
-    console.log("Value in DB now:", rows[0].pdf_footer_text);
+    console.log("Connection successful. Value in DB:", rows[0] ? rows[0].pdf_footer_text : 'No settings found');
     
     await db.end();
 }
