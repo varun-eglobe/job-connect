@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Settings, MapPin, Plus, X, ArrowLeft, Layout, FileText, Save, Trash2, Edit3, Globe, Lock, ChevronRight, HelpCircle, Users, ShieldCheck, Mail, Key, GripVertical, ChevronDown, MessageSquare, Building2, Eye, EyeOff, Search, Send, Clock, Activity } from 'lucide-react';
+import { Settings, MapPin, Plus, X, ArrowLeft, Layout, FileText, Save, Trash2, Edit3, Globe, Lock, ChevronRight, HelpCircle, Users, ShieldCheck, Mail, Key, GripVertical, ChevronDown, MessageSquare, Building2, Eye, EyeOff, Search, Send, Clock, Activity, Check } from 'lucide-react';
 
 // Custom Wrapper for Quill to handle React 19 stability via CDN
 const WYSIWYG = ({ value, onChange, placeholder }) => {
     const editorRef = useRef(null);
     const quillInstance = useRef(null);
     const lastValueRef = useRef(value || '');
+    const onChangeRef = useRef(onChange);
+
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
 
     useEffect(() => {
         const initQuill = () => {
@@ -32,7 +37,9 @@ const WYSIWYG = ({ value, onChange, placeholder }) => {
                     const html = quillInstance.current.root.innerHTML;
                     const normalizedHtml = html === '<p><br></p>' ? '' : html;
                     lastValueRef.current = normalizedHtml;
-                    onChange(normalizedHtml);
+                    if (onChangeRef.current) {
+                        onChangeRef.current(normalizedHtml);
+                    }
                 });
             }
         };
@@ -106,7 +113,8 @@ const AdminSettings = () => {
         smtp_pass: '',
         smtp_sender: '',
         smtp_secure: 0,
-        smtp_enabled: 0
+        smtp_enabled: 0,
+        admin_login_secret: ''
     });
     const [pages, setPages] = useState([]);
     const [editingPage, setEditingPage] = useState(null);
@@ -173,7 +181,7 @@ const AdminSettings = () => {
     const [showTestimonialModal, setShowTestimonialModal] = useState(false);
     const [editingTestimonialId, setEditingTestimonialId] = useState(null);
     const [csrPartners, setCsrPartners] = useState([]);
-    const [newCsrPartner, setNewCsrPartner] = useState({ name: '', logo_url: '' });
+    const [newCsrPartner, setNewCsrPartner] = useState({ name: '', logo_url: '', status: 'active' });
     const [showCsrModal, setShowCsrModal] = useState(false);
     const [editingCsrId, setEditingCsrId] = useState(null);
 
@@ -193,7 +201,7 @@ const AdminSettings = () => {
                 axios.get(`${API_BASE}/settings`).catch(e => ({ data: {} })),
                 axios.get(`${API_BASE}/admin/pages`).catch(e => ({ data: [] })),
                 axios.get(`${API_BASE}/helpdesks`).catch(e => ({ data: [] })),
-                axios.get(`${API_BASE}/csr-partners`).catch(e => ({ data: [] })),
+                axios.get(`${API_BASE}/csr-partners?all=true`).catch(e => ({ data: [] })),
                 can('manage_users') ? axios.get(`${API_BASE}/admin/users`).catch(e => ({ data: [] })) : { data: [] }
             ]);
             setLocations(locRes.data || []);
@@ -505,7 +513,7 @@ const AdminSettings = () => {
 
     const fetchCsrPartners = async () => {
         try {
-            const res = await axios.get('/api/csr-partners');
+            const res = await axios.get('/api/csr-partners?all=true');
             setCsrPartners(res.data);
         } catch (err) { console.error("CSR fetch failed", err); }
     };
@@ -517,7 +525,7 @@ const AdminSettings = () => {
             else await axios.post(`${API_BASE}/admin/csr-partners`, newCsrPartner);
             setShowCsrModal(false);
             setEditingCsrId(null);
-            setNewCsrPartner({ name: '', logo_url: '' });
+            setNewCsrPartner({ name: '', logo_url: '', status: 'active' });
             fetchCsrPartners();
             alert("Partner saved!");
         } catch (err) { 
@@ -597,7 +605,7 @@ const AdminSettings = () => {
                     { id: 'homepage', label: 'Home Page CMS', icon: Globe, permission: 'manage_homepage' },
                     { id: 'pages', label: 'Footer Pages', icon: FileText, permission: 'manage_pages' },
                     { id: 'testimonials', label: 'Testimonials', icon: MessageSquare, permission: 'manage_testimonials' },
-                    { id: 'csr', label: 'CSR Partners', icon: Building2, permission: 'manage_csr' },
+                    { id: 'csr', label: 'Partners', icon: Building2, permission: 'manage_csr' },
                 ]
             }
         ];
@@ -873,7 +881,7 @@ const AdminSettings = () => {
                                                                  { key: 'manage_support', label: 'Support Directory', desc: 'Add/Edit Ward offices and helpdesks' },
                                                                  { key: 'manage_pages', label: 'Footer Pages', desc: 'Manage Terms, Privacy, and custom footer pages' },
                                                                  { key: 'manage_testimonials', label: 'Testimonials', desc: 'Manage official quotes on the home page' },
-                                                                 { key: 'manage_csr', label: 'CSR Partners', desc: 'Manage partners list and CSR description' },
+                                                                 { key: 'manage_csr', label: 'Partners', desc: 'Manage partners list and partners description' },
                                                             ].map(p => (
                                                                 <div 
                                                                     key={p.key} 
@@ -1858,11 +1866,13 @@ const AdminSettings = () => {
                             </div>
                         )}
 
+
+
                         {activeTab === 'pages' && can('manage_pages') && (
                             <div className="animate-in fade-in duration-500">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                                     <div><h2 className="text-xl font-black text-slate-800">Platform Custom Pages</h2><p className="text-sm text-slate-500">Create policies, terms, and informational content.</p></div>
-                                    {!editingPage && <button onClick={() => setEditingPage({ title: '', slug: '', content: '', is_active: true })} className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-black transition-all"><Plus size={20} /> Create Page</button>}
+                                    {!editingPage && <button onClick={() => setEditingPage({ title: '', slug: '', content: '', target_role: 'public', is_active: true })} className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-black transition-all"><Plus size={20} /> Create Page</button>}
                                 </div>
                                 <div className="p-8">
                                     {editingPage ? (
@@ -1870,6 +1880,20 @@ const AdminSettings = () => {
                                             <div className="flex flex-col md:flex-row gap-6">
                                                 <div className="flex-1 space-y-2"><label className="text-xs font-black text-slate-400 uppercase ml-1">Page Title</label><input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none placeholder:text-slate-300 placeholder:font-normal" value={editingPage.title} onChange={(e) => setEditingPage({...editingPage, title: e.target.value})} placeholder="e.g. User Agreement" /></div>
                                                 <div className="flex-1 space-y-2"><label className="text-xs font-black text-slate-400 uppercase ml-1">Friendly URL (Slug)</label><div className="flex items-center gap-2"><span className="text-slate-300 text-sm font-mono italic">/page/</span><input className="flex-1 h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-sm outline-none placeholder:text-slate-300 placeholder:font-normal" value={editingPage.slug} onChange={(e) => setEditingPage({...editingPage, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} placeholder="user-agreement" /></div></div>
+                                                <div className="flex-1 space-y-2">
+                                                    <label className="text-xs font-black text-slate-400 uppercase ml-1">Visibility</label>
+                                                    <div className="relative">
+                                                        <select 
+                                                            className="w-full h-12 px-5 pr-10 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:border-blue-500 focus:bg-white transition-all text-sm font-bold appearance-none cursor-pointer"
+                                                            value={editingPage.target_role || 'public'}
+                                                            onChange={(e) => setEditingPage({...editingPage, target_role: e.target.value})}
+                                                        >
+                                                            <option value="public">Public (All)</option>
+                                                            <option value="employer">Employer Only</option>
+                                                        </select>
+                                                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="space-y-2"><label className="text-xs font-black text-slate-400 uppercase ml-1">Page Content (Visual Editor)</label><WYSIWYG value={editingPage.content} onChange={(content) => setEditingPage({...editingPage, content})} placeholder="Focus on the details..." /></div>
                                             <div className="flex justify-between items-center pt-8 border-t border-slate-50">
@@ -1890,10 +1914,11 @@ const AdminSettings = () => {
                                                     <table className="w-full">
                                                         <thead>
                                                             <tr className="border-b border-slate-100">
-                                                                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3 pl-1">Page Title</th>
-                                                                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">URL Slug</th>
-                                                                <th className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">Status</th>
-                                                                <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3 pr-1">Actions</th>
+                                                                 <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3 pl-1">Page Title</th>
+                                                                 <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">URL Slug</th>
+                                                                 <th className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">Visibility</th>
+                                                                 <th className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">Status</th>
+                                                                 <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3 pr-1">Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-slate-50">
@@ -1904,6 +1929,11 @@ const AdminSettings = () => {
                                                                     </td>
                                                                     <td className="py-4">
                                                                         <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">/page/{page.slug}</span>
+                                                                    </td>
+                                                                    <td className="py-4 text-center">
+                                                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${page.target_role === 'employer' ? 'bg-indigo-100 text-indigo-600' : 'bg-blue-100 text-blue-600'}`}>
+                                                                            {page.target_role === 'employer' ? 'Employer Only' : 'Public'}
+                                                                        </span>
                                                                     </td>
                                                                     <td className="py-4 text-center">
                                                                         <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${page.is_active ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}`}>
@@ -2006,7 +2036,7 @@ const AdminSettings = () => {
                         {activeTab === 'csr' && can('manage_csr') && (
                             <div className="animate-in fade-in duration-500">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                    <div><h2 className="text-xl font-black text-slate-800">CSR Partners Content</h2><p className="text-sm text-slate-500">Manage description and partners list.</p></div>
+                                    <div><h2 className="text-xl font-black text-slate-800">Partners Content</h2><p className="text-sm text-slate-500">Manage description and partners list.</p></div>
                                     <div className="flex gap-2">
                                         <button onClick={handleSaveSettings} className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-black transition-all shadow-lg shadow-slate-100"><Save size={18} /> Update Content</button>
                                     </div>
@@ -2021,7 +2051,7 @@ const AdminSettings = () => {
                                                     type="text" 
                                                     value={settings.csr_home_title || ''} 
                                                     onChange={(e) => setSettings({...settings, csr_home_title: e.target.value})}
-                                                    placeholder="e.g., CSR Funding & Support"
+                                                    placeholder="e.g., Partners & Support"
                                                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-bold"
                                                 />
                                             </div>
@@ -2045,7 +2075,7 @@ const AdminSettings = () => {
                                                     type="text" 
                                                     value={settings.csr_page_title || ''} 
                                                     onChange={(e) => setSettings({...settings, csr_page_title: e.target.value})}
-                                                    placeholder="e.g., CSR Partners"
+                                                    placeholder="e.g., Our Partners"
                                                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-bold"
                                                 />
                                             </div>
@@ -2063,14 +2093,14 @@ const AdminSettings = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">CSR Partners Page Intro/Content</label>
-                                        <WYSIWYG value={settings.csr_partners_content || ''} onChange={(val) => setSettings({...settings, csr_partners_content: val})} placeholder="Add some introductory text for the CSR partners page..." />
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Partners Page Intro/Content</label>
+                                        <WYSIWYG value={settings.csr_partners_content || ''} onChange={(val) => setSettings({...settings, csr_partners_content: val})} placeholder="Add some introductory text for the partners page..." />
                                     </div>
                                     <div className="pt-8 border-t border-slate-100">
                                         <div className="flex justify-between items-center mb-6">
                                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Partner Logos ({csrPartners.length})</h3>
                                             <button 
-                                                onClick={() => { setEditingCsrId(null); setNewCsrPartner({ name: '', logo_url: '' }); setShowCsrModal(true); }} 
+                                                onClick={() => { setEditingCsrId(null); setNewCsrPartner({ name: '', logo_url: '', status: 'active' }); setShowCsrModal(true); }} 
                                                 className="h-10 px-6 bg-blue-600 text-white rounded-full font-bold text-sm flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
                                             >
                                                 <Plus size={18} /> Add New Partner
@@ -2078,7 +2108,12 @@ const AdminSettings = () => {
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                             {csrPartners.map(partner => (
-                                                <div key={partner.id} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl group hover:border-blue-200 transition-all text-center">
+                                                <div key={partner.id} className="p-6 bg-slate-50 border border-slate-100 rounded-3xl group hover:border-blue-200 transition-all text-center relative overflow-hidden">
+                                                    <div className="absolute top-4 right-4">
+                                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${partner.status === 'inactive' ? 'bg-slate-200 text-slate-500' : 'bg-green-100 text-green-600'}`}>
+                                                            {partner.status || 'active'}
+                                                        </span>
+                                                    </div>
                                                     <div className="w-20 h-20 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center p-2 border border-slate-100 shadow-sm">
                                                         {partner.logo_url ? (
                                                             <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-contain" />
@@ -2088,7 +2123,27 @@ const AdminSettings = () => {
                                                     </div>
                                                     <h3 className="font-black text-slate-800 mb-1">{partner.name}</h3>
                                                     <div className="flex gap-2 justify-center mt-4">
-                                                        <button onClick={() => { setEditingCsrId(partner.id); setNewCsrPartner({ name: partner.name, logo_url: partner.logo_url }); setShowCsrModal(true); }} className="p-2 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors"><Edit3 size={16} /></button>
+                                                        <button 
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const newStatus = partner.status === 'inactive' ? 'active' : 'inactive';
+                                                                    await axios.put(`${API_BASE}/admin/csr-partners/${partner.id}`, {
+                                                                        name: partner.name,
+                                                                        logo_url: partner.logo_url,
+                                                                        status: newStatus
+                                                                    });
+                                                                    fetchCsrPartners();
+                                                                } catch (err) {
+                                                                    console.error(err);
+                                                                    alert("Failed to toggle status");
+                                                                }
+                                                            }} 
+                                                            className={`p-2 rounded-xl transition-colors ${partner.status === 'inactive' ? 'text-green-600 hover:bg-green-50' : 'text-slate-400 hover:bg-slate-200'}`}
+                                                            title={partner.status === 'inactive' ? 'Activate Partner' : 'Deactivate Partner'}
+                                                        >
+                                                            <Check size={16} />
+                                                        </button>
+                                                        <button onClick={() => { setEditingCsrId(partner.id); setNewCsrPartner({ name: partner.name, logo_url: partner.logo_url, status: partner.status || 'active' }); setShowCsrModal(true); }} className="p-2 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors"><Edit3 size={16} /></button>
                                                         <button onClick={() => handleDeleteCsrPartner(partner.id)} className="p-2 text-red-500 hover:bg-red-100 rounded-xl transition-colors"><Trash2 size={16} /></button>
                                                     </div>
                                                 </div>
@@ -2224,68 +2279,106 @@ const AdminSettings = () => {
                         {activeTab === 'security' && (
                             <div className="animate-in fade-in duration-500">
                                 <div className="p-6 border-b border-slate-100 bg-slate-50/50"><h2 className="text-xl font-black text-slate-800">Account Security</h2><p className="text-sm text-slate-500">Management credentials and security protocols.</p></div>
-                                <div className="p-8 max-w-md">
-                                    <form onSubmit={handlePasswordReset} className="space-y-4">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showCurrentPassword ? "text" : "password"}
-                                                    required
-                                                    className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100"
-                                                    value={passwords.current}
-                                                    onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                                                >
-                                                    {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
+                                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+                                    <div>
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Change Password</h3>
+                                        <form onSubmit={handlePasswordReset} className="space-y-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showCurrentPassword ? "text" : "password"}
+                                                        required
+                                                        className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100"
+                                                        value={passwords.current}
+                                                        onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                                    >
+                                                        {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showNewPassword ? "text" : "password"}
+                                                        required
+                                                        className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100"
+                                                        value={passwords.new}
+                                                        onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                                    >
+                                                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        required
+                                                        className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100"
+                                                        value={passwords.confirm}
+                                                        onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {passMsg && <div className={`text-xs font-bold p-4 rounded-2xl ${passMsg.type === 'error' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}>{passMsg.text}</div>}
+                                            <button type="submit" className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all mt-4">Update Administrator Credentials</button>
+                                        </form>
+                                    </div>
+                                    <div className="border-t md:border-t-0 md:border-l border-slate-100 pt-8 md:pt-0 md:pl-12 flex flex-col justify-between">
+                                        <div>
+                                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Gateway Restriction</h3>
+                                            <div className="space-y-4">
+                                                <div className="space-y-1">
+                                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Admin Gateway Secret Key</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g., brazil"
+                                                        className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100 font-bold"
+                                                        value={settings.admin_login_secret || ''}
+                                                        onChange={(e) => setSettings({...settings, admin_login_secret: e.target.value})}
+                                                    />
+                                                    <p className="text-[10px] text-slate-400 italic mt-2 leading-relaxed">
+                                                        When configured, users must access the administrative gateway via a secret query parameter.
+                                                    </p>
+                                                    <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-2xl mt-4">
+                                                        <div className="text-[10px] font-black uppercase text-blue-600 tracking-wider mb-1">Example Gateway URL:</div>
+                                                        <div className="text-[11px] font-mono break-all text-slate-700 select-all font-bold">
+                                                            {window.location.origin}/admin-login/?secret={settings.admin_login_secret || 'yourkey'}
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400 italic mt-2 leading-relaxed">
+                                                        If the key is left empty, the gateway will be accessible to everyone at the standard <span className="font-bold">/admin-login</span> URL.
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showNewPassword ? "text" : "password"}
-                                                    required
-                                                    className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100"
-                                                    value={passwords.new}
-                                                    onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowNewPassword(!showNewPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                                                >
-                                                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showConfirmPassword ? "text" : "password"}
-                                                    required
-                                                    className="w-full h-12 pl-5 pr-12 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-100"
-                                                    value={passwords.confirm}
-                                                    onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                                                >
-                                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        {passMsg && <div className={`text-xs font-bold p-4 rounded-2xl ${passMsg.type === 'error' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}>{passMsg.text}</div>}
-                                        <button type="submit" className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all mt-4">Update Administrator Credentials</button>
-                                    </form>
+                                        <button 
+                                            onClick={handleSaveSettings} 
+                                            className="w-full h-14 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 mt-8"
+                                        >
+                                            Save Gateway Restriction
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -2366,14 +2459,14 @@ const AdminSettings = () => {
                 </div>
             )}
             
-            {/* CSR Partner Modal */}
+            {/* Partner Modal */}
             {showCsrModal && (
                 <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setShowCsrModal(false)} />
                     <div className="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in zoom-in-95 duration-300">
                         <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
-                                <h3 className="text-xl font-black text-slate-800">{editingCsrId ? 'Edit Partner' : 'Add CSR Partner'}</h3>
+                                <h3 className="text-xl font-black text-slate-800">{editingCsrId ? 'Edit Partner' : 'Add Partner'}</h3>
                                 <p className="text-xs text-slate-500">Add company logo and categorization.</p>
                             </div>
                             <button onClick={() => setShowCsrModal(false)} className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-800 flex items-center justify-center transition-all shadow-sm"><X size={20} /></button>
@@ -2382,6 +2475,26 @@ const AdminSettings = () => {
                             <div className="space-y-1">
                                 <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Company Name</label>
                                 <input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:border-blue-500 transition-all text-sm" value={newCsrPartner.name} onChange={e => setNewCsrPartner({...newCsrPartner, name: e.target.value})} required />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Status</label>
+                                <div className="flex gap-4">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setNewCsrPartner({...newCsrPartner, status: 'active'})}
+                                        className={`flex-1 h-12 rounded-2xl font-bold text-sm transition-all border ${newCsrPartner.status !== 'inactive' ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-100' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                                    >
+                                        Active
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setNewCsrPartner({...newCsrPartner, status: 'inactive'})}
+                                        className={`flex-1 h-12 rounded-2xl font-bold text-sm transition-all border ${newCsrPartner.status === 'inactive' ? 'bg-slate-500 border-slate-500 text-white shadow-lg shadow-slate-100' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                                    >
+                                        Inactive
+                                    </button>
+                                </div>
                             </div>
                             
                             <div className="space-y-2">

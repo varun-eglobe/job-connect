@@ -148,7 +148,10 @@ const JobDetail = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get(`/api/jobs/${id}`);
+        const role = localStorage.getItem('role');
+        const userId = localStorage.getItem('user_id');
+        const url = (role === 'candidate' && userId) ? `/api/jobs/${id}?candidate_id=${userId}` : `/api/jobs/${id}`;
+        const response = await axios.get(url);
         setJob(response.data.job);
         setSimilarJobs(response.data.similarJobs || []);
       } catch (err) {
@@ -315,6 +318,9 @@ const JobDetail = () => {
                 {job.age_range && (
                   <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-lg border border-slate-100 font-semibold text-slate-600">
                     Age: {job.age_range}
+                    {job.is_age_eligible === false && (
+                      <span className="text-red-500 font-black ml-1 text-xs">(Not Eligible)</span>
+                    )}
                   </span>
                 )}
                 
@@ -394,7 +400,7 @@ const JobDetail = () => {
                       <div>
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Interview Slots</div>
                         <div className="font-extrabold text-indigo-700 text-lg">
-                          Token: {Math.max(0, job.token_count - (job.applied_count || 0))} Remaining of {job.token_count} Total
+                          Token: {job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : Math.max(0, job.token_count - (job.applied_count || 0))} Remaining
                         </div>
                       </div>
                       
@@ -402,10 +408,10 @@ const JobDetail = () => {
                         <div>
                           {candidateApplications.some(app => app.job_id === job.id) ? (
                             <div className="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black uppercase tracking-widest rounded-xl flex items-center gap-1.5 shadow-sm">
-                              <Check size={14} strokeWidth={3} />
+                               <Check size={14} strokeWidth={3} />
                               Token #{candidateApplications.find(app => app.job_id === job.id)?.token_number} Applied
                             </div>
-                          ) : (job.token_count - (job.applied_count || 0) > 0) ? (
+                          ) : job.is_age_eligible === false ? null : ((job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : (job.token_count - (job.applied_count || 0))) > 0) ? (
                             <button 
                               onClick={handleOpenApplyModal}
                               className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"

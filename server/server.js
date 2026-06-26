@@ -41,6 +41,19 @@ checkDbConnection();
     }
 })();
 
+// Add admin_login_secret column to site_settings if it doesn't exist
+(async () => {
+    try {
+        const [cols] = await db.query("SHOW COLUMNS FROM site_settings LIKE 'admin_login_secret'");
+        if (cols.length === 0) {
+            await db.query("ALTER TABLE site_settings ADD COLUMN admin_login_secret VARCHAR(255) DEFAULT NULL");
+            console.log("✓ Added 'admin_login_secret' to site_settings table.");
+        }
+    } catch (err) {
+        console.error('Failed to add admin_login_secret column to site_settings:', err.message);
+    }
+})();
+
 // Helper: log an admin action
 async function logActivity(req, action, targetType, targetId, targetLabel) {
     try {
@@ -493,8 +506,88 @@ app.get('/api/health', async (req, res) => {
 
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`, req.body);
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     next();
 });
+
+// Helper to get local date string in YYYY-MM-DD format
+function getLocalTodayString() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Helper to parse time string (HH:MM or HH:MM AM/PM) to minutes of day
+function parseTimeStrToMinutes(timeStr) {
+    if (!timeStr) return 0;
+    const clean = timeStr.trim().toLowerCase();
+    let hours = 0;
+    let minutes = 0;
+    
+    // Check if there is AM/PM
+    const isPm = clean.includes('pm');
+    const isAm = clean.includes('am');
+    
+    // Strip AM/PM and split by colon
+    const timePart = clean.replace(/am|pm/g, '').trim();
+    const parts = timePart.split(':');
+    
+    hours = parseInt(parts[0], 10) || 0;
+    minutes = parseInt(parts[1], 10) || 0;
+    
+    if (isPm && hours < 12) {
+        hours += 12;
+    } else if (isAm && hours === 12) {
+        hours = 0;
+    }
+    return hours * 60 + minutes;
+}
+
+// Helper to determine if a token slot is currently active based on date and time
+function isSlotActive(s, todayStr, currentLocalTimeStr) {
+    if (!s.date) return false;
+    return s.date > todayStr;
+}
+
+// Helper to attach active/remaining token counts to a job object
+async function attachActiveTokenCounts(job) {
+    if (!job || !job.is_token_based) return;
+    let slots = [];
+    try {
+        slots = typeof job.token_slots === 'string' ? JSON.parse(job.token_slots) : (job.token_slots || []);
+    } catch (e) {
+        slots = [];
+    }
+    const [appRows] = await db.execute('SELECT token_number FROM applications WHERE job_id = ?', [job.id]);
+    const usedTokens = new Set(appRows.map(r => r.token_number).filter(n => n !== null));
+    const todayStr = getLocalTodayString();
+    
+    const d = new Date();
+    const currentLocalTimeStr = [
+        String(d.getHours()).padStart(2, '0'),
+        String(d.getMinutes()).padStart(2, '0')
+    ].join(':');
+
+    let activeTotal = 0;
+    let activeRemaining = 0;
+    for (const s of slots) {
+        if (isSlotActive(s, todayStr, currentLocalTimeStr)) {
+            for (let t = s.startNumber; t <= s.endNumber; t++) {
+                activeTotal++;
+                if (!usedTokens.has(t)) {
+                    activeRemaining++;
+                }
+            }
+        }
+    }
+    job.active_total_tokens = activeTotal;
+    job.active_remaining_tokens = activeRemaining;
+}
+
 
 // Routes
 process.on('uncaughtException', (err) => console.error('CRITICAL ERROR:', err));
@@ -590,19 +683,19 @@ app.get('/api/jobs', async (req, res) => {
         const countParams = [];
 
         if (!employer_id) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalTodayString();
             const candidate_id = req.query.candidate_id;
             
             if (candidate_id) {
-                query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
-                countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
-                params.push(today, candidate_id);
-                countParams.push(today, candidate_id);
+                query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
+                countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
+                params.push(today, today, candidate_id);
+                countParams.push(today, today, candidate_id);
             } else {
-                query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
-                countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
-                params.push(today);
-                countParams.push(today);
+                query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
+                countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count)';
+                params.push(today, today);
+                countParams.push(today, today);
             }
         }
 
@@ -674,46 +767,30 @@ app.get('/api/jobs', async (req, res) => {
         }
         
         let rows, total;
-        if (candidateAge !== null) {
-            // We have candidate age. We need to filter by age range requirement in memory.
-            const baseQuery = query + ' ORDER BY created_at DESC';
-            
-            const fs = require('fs');
-            const logMsg = `[${new Date().toISOString()}]
-SQL: ${baseQuery}
-Params: ${JSON.stringify(params)}
-Count SQL: ${countQuery}
-Count Params: ${JSON.stringify(countParams)}
------------------------------------\n`;
-            fs.appendFileSync('sql_debug.log', logMsg);
-
-            const [allRows] = await db.query(baseQuery, params);
-            
-            // Filter by age match
-            const filteredRows = allRows.filter(job => matchesAgeRange(candidateAge, job.age_range));
-            
-            total = filteredRows.length;
-            rows = filteredRows.slice(offset, offset + limit);
-        } else {
-            // Standard SQL query with limit & offset
-            const finalQuery = query + ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-            const queryParams = [...params, limit, offset];
-            
-            const fs = require('fs');
-            const logMsg = `[${new Date().toISOString()}]
+        // Standard SQL query with limit & offset
+        const finalQuery = query + ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        const queryParams = [...params, limit, offset];
+        
+        const fs = require('fs');
+        const logMsg = `[${new Date().toISOString()}]
 SQL: ${finalQuery}
 Params: ${JSON.stringify(queryParams)}
 Count SQL: ${countQuery}
 Count Params: ${JSON.stringify(countParams)}
 -----------------------------------\n`;
-            fs.appendFileSync('sql_debug.log', logMsg);
+        fs.appendFileSync('sql_debug.log', logMsg);
 
-            const [dbRows] = await db.query(finalQuery, queryParams);
-            const [totalRows] = await db.query(countQuery, countParams);
-            rows = dbRows;
-            total = totalRows[0].total;
-        }
+        const [dbRows] = await db.query(finalQuery, queryParams);
+        const [totalRows] = await db.query(countQuery, countParams);
+        rows = dbRows;
+        total = totalRows[0].total;
         
+        rows.forEach(job => {
+            job.is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, job.age_range) : true;
+        });
+        
+        await Promise.all(rows.map(job => attachActiveTokenCounts(job)));
+
         res.json({
             jobs: rows,
             total: total,
@@ -731,10 +808,12 @@ Count Params: ${JSON.stringify(countParams)}
 // 1.5 Get a single job by ID with similar jobs
 app.get('/api/jobs/:id', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalTodayString();
+        const candidate_id = req.query.candidate_id;
+        
         let [jobs] = await db.execute(
-            'SELECT jobs.*, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count, users.company_name, users.address, users.google_map_link, users.email, users.phone, users.is_verified, users.is_gst_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE jobs.id = ? AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND users.is_approved = 1 AND users.is_deleted_by_admin = 0',
-            [req.params.id, today]
+            'SELECT jobs.*, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count, users.company_name, users.address, users.google_map_link, users.email, users.phone, users.is_verified, users.is_gst_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE jobs.id = ? AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND users.is_deleted_by_admin = 0',
+            [req.params.id, today, today]
         );
         
         if (jobs.length === 0) {
@@ -750,10 +829,33 @@ app.get('/api/jobs/:id', async (req, res) => {
             }
         }
         
+        let candidateAge = null;
+        if (candidate_id) {
+            const [candidateRows] = await db.execute('SELECT dob FROM users WHERE id = ?', [candidate_id]);
+            if (candidateRows.length > 0 && candidateRows[0].dob) {
+                const dob = new Date(candidateRows[0].dob);
+                const todayDate = new Date();
+                let age = todayDate.getFullYear() - dob.getFullYear();
+                const monthDiff = todayDate.getMonth() - dob.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && todayDate.getDate() < dob.getDate())) {
+                    age--;
+                }
+                candidateAge = age;
+            }
+        }
+        
+        jobs[0].is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, jobs[0].age_range) : true;
+        
+        await attachActiveTokenCounts(jobs[0]);
+
         const [similarJobs] = await db.execute(
-            'SELECT jobs.*, users.company_name, users.is_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE jobs.id != ? AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?) AND (jobs.job_type = ? OR jobs.location = ?) AND users.is_approved = 1 AND users.is_deleted_by_admin = 0 ORDER BY created_at DESC LIMIT 3',
-            [req.params.id, today, jobs[0].job_type, jobs[0].location]
+            'SELECT jobs.*, users.company_name, users.is_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE jobs.id != ? AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND (jobs.job_type = ? OR jobs.location = ?) AND users.is_approved = 1 AND users.is_deleted_by_admin = 0 ORDER BY created_at DESC LIMIT 3',
+            [req.params.id, today, today, jobs[0].job_type, jobs[0].location]
         );
+        
+        similarJobs.forEach(simJob => {
+            simJob.is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, simJob.age_range) : true;
+        });
         
         res.json({ job: jobs[0], similarJobs });
     } catch (err) {
@@ -765,19 +867,19 @@ app.get('/api/jobs/:id', async (req, res) => {
 // Top Searches based on Job Availability
 app.get('/api/top-searches', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalTodayString();
         const [rows] = await db.execute(`
             SELECT jobs.title, SUM(jobs.vacancies_count) as total_vacancies
             FROM jobs 
             JOIN users ON jobs.employer_id = users.id
             WHERE jobs.status = "active" 
-              AND (jobs.expiry_date IS NULL OR jobs.expiry_date >= ?)
+              AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?))
               AND users.is_approved = 1
               AND users.is_deleted_by_admin = 0
             GROUP BY jobs.title
             ORDER BY total_vacancies DESC
             LIMIT 5
-        `, [today]);
+        `, [today, today]);
         
         res.json(rows.map(row => row.title));
     } catch (err) {
@@ -790,6 +892,10 @@ app.get('/api/top-searches', async (req, res) => {
 app.post('/api/jobs', async (req, res) => {
     try {
         const { employer_id, title, description, location, job_type, vacancies_count, expiry_date, contact_person, contact_phone, status, is_urgent, salary_range, is_token_based, token_count, token_split, token_slots, age_range, qualification } = req.body;
+        
+        if (!age_range || !String(age_range).trim()) {
+            return res.status(400).json({ error: 'Age Range is required.' });
+        }
         
         const [users] = await db.execute('SELECT payment_status FROM users WHERE id = ? AND is_deleted_by_admin = 0', [employer_id]);
         
@@ -839,6 +945,10 @@ app.put('/api/jobs/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { title, description, location, job_type, vacancies_count, expiry_date, contact_person, contact_phone, status, employer_id, is_urgent, salary_range, is_token_based, token_count, token_split, token_slots, age_range, qualification } = req.body;
+
+        if (!age_range || !String(age_range).trim()) {
+            return res.status(400).json({ error: 'Age Range is required.' });
+        }
 
         // Verify ownership
         const [jobs] = await db.execute('SELECT employer_id FROM jobs WHERE id = ?', [id]);
@@ -923,16 +1033,6 @@ app.post('/api/jobs/:id/apply', async (req, res) => {
         let tokenSlotTime = null;
 
         if (job.is_token_based) {
-            // Get current application count
-            const [countRows] = await db.execute('SELECT COUNT(*) as total FROM applications WHERE job_id = ?', [jobId]);
-            const appliedCount = countRows[0].total;
-            
-            if (appliedCount >= job.token_count) {
-                return res.status(400).json({ error: 'All available interview tokens for this job have been booked.' });
-            }
-
-            tokenNumber = appliedCount + 1;
-
             // Parse token slots
             let slots = [];
             try {
@@ -941,11 +1041,37 @@ app.post('/api/jobs/:id/apply', async (req, res) => {
                 slots = [];
             }
 
-            // Find matching slot where tokenNumber falls in range [startNumber, endNumber]
-            const matchingSlot = slots.find(s => tokenNumber >= s.startNumber && tokenNumber <= s.endNumber);
-            if (matchingSlot) {
-                tokenSlotDate = matchingSlot.date || null;
-                tokenSlotTime = `${matchingSlot.startTime} - ${matchingSlot.endTime}`;
+            // Get existing applications with their token numbers
+            const [appRows] = await db.execute('SELECT token_number FROM applications WHERE job_id = ?', [jobId]);
+            const usedTokens = new Set(appRows.map(r => r.token_number).filter(n => n !== null));
+
+            const todayStr = getLocalTodayString();
+
+            let assigned = false;
+            const d = new Date();
+            const currentLocalTimeStr = [
+                String(d.getHours()).padStart(2, '0'),
+                String(d.getMinutes()).padStart(2, '0')
+            ].join(':');
+
+            for (const s of slots) {
+                if (isSlotActive(s, todayStr, currentLocalTimeStr)) {
+                    // Find the first unused token number in this slot's range
+                    for (let t = s.startNumber; t <= s.endNumber; t++) {
+                        if (!usedTokens.has(t)) {
+                            tokenNumber = t;
+                            tokenSlotDate = s.date;
+                            tokenSlotTime = `${s.startTime} - ${s.endTime}`;
+                            assigned = true;
+                            break;
+                        }
+                    }
+                }
+                if (assigned) break;
+            }
+
+            if (!assigned) {
+                return res.status(400).json({ error: 'All available active interview tokens for this job have been booked or the interview dates have passed.' });
             }
         }
 
@@ -1063,7 +1189,8 @@ app.get('/api/employers', async (req, res) => {
 app.get('/api/employers/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const today = new Date().toISOString().split('T')[0];
+        const today = getLocalTodayString();
+        const candidate_id = req.query.candidate_id;
         
         // Fetch company info
         const [companies] = await db.execute(
@@ -1075,9 +1202,30 @@ app.get('/api/employers/:id', async (req, res) => {
         
         // Fetch their active jobs
         const [jobs] = await db.execute(
-            'SELECT *, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count FROM jobs WHERE employer_id = ? AND status = "active" AND (expiry_date IS NULL OR expiry_date >= ?) AND (is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < token_count) ORDER BY created_at DESC',
-            [id, today]
+            'SELECT *, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count FROM jobs WHERE employer_id = ? AND status = "active" AND (expiry_date IS NULL OR (is_token_based = 0 AND expiry_date >= ?) OR (is_token_based = 1 AND expiry_date > ?)) AND (is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < token_count) ORDER BY created_at DESC',
+            [id, today, today]
         );
+        
+        let candidateAge = null;
+        if (candidate_id) {
+            const [candidateRows] = await db.execute('SELECT dob FROM users WHERE id = ?', [candidate_id]);
+            if (candidateRows.length > 0 && candidateRows[0].dob) {
+                const dob = new Date(candidateRows[0].dob);
+                const todayDate = new Date();
+                let age = todayDate.getFullYear() - dob.getFullYear();
+                const monthDiff = todayDate.getMonth() - dob.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && todayDate.getDate() < dob.getDate())) {
+                    age--;
+                }
+                candidateAge = age;
+            }
+        }
+        
+        jobs.forEach(job => {
+            job.is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, job.age_range) : true;
+        });
+        
+        await Promise.all(jobs.map(job => attachActiveTokenCounts(job)));
         
         res.json({ employer: companies[0], jobs });
     } catch (err) {
@@ -2108,7 +2256,11 @@ app.get('/api/admin/activity-log', async (req, res) => {
 // CSR Partners Management
 app.get('/api/csr-partners', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM csr_partners ORDER BY created_at DESC');
+        const showAll = req.query.all === 'true';
+        const query = showAll 
+            ? 'SELECT * FROM csr_partners ORDER BY created_at DESC'
+            : "SELECT * FROM csr_partners WHERE status = 'active' ORDER BY created_at DESC";
+        const [rows] = await db.query(query);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch CSR partners' });
@@ -2117,11 +2269,11 @@ app.get('/api/csr-partners', async (req, res) => {
 
 app.post('/api/admin/csr-partners', async (req, res) => {
     try {
-        const { name, logo_url } = req.body;
-        console.log('Adding CSR Partner:', { name, logo_url });
+        const { name, logo_url, status } = req.body;
+        console.log('Adding CSR Partner:', { name, logo_url, status });
         const [result] = await db.execute(
-            'INSERT INTO csr_partners (name, logo_url) VALUES (?, ?)',
-            [name, logo_url]
+            'INSERT INTO csr_partners (name, logo_url, status) VALUES (?, ?, ?)',
+            [name, logo_url, status || 'active']
         );
         res.json({ id: result.insertId, success: true });
     } catch (err) {
@@ -2150,11 +2302,11 @@ app.post('/api/admin/csr-partners/upload', upload.single('csr_logo'), (req, res)
 app.put('/api/admin/csr-partners/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, logo_url } = req.body;
-        console.log('Updating CSR Partner:', { id, name, logo_url });
+        const { name, logo_url, status } = req.body;
+        console.log('Updating CSR Partner:', { id, name, logo_url, status });
         await db.execute(
-            'UPDATE csr_partners SET name = ?, logo_url = ? WHERE id = ?',
-            [name, logo_url, id]
+            'UPDATE csr_partners SET name = ?, logo_url = ?, status = ? WHERE id = ?',
+            [name, logo_url, status || 'active', id]
         );
         res.json({ success: true });
     } catch (err) {
@@ -2256,7 +2408,8 @@ async function handleSettingsUpdate(req, res) {
             smtp_host = ?, smtp_port = ?,
             smtp_user = ?, smtp_pass = ?,
             smtp_sender = ?, smtp_secure = ?,
-            smtp_enabled = ?
+            smtp_enabled = ?,
+            admin_login_secret = ?
             WHERE id = 1
         `;
         const params = [
@@ -2272,9 +2425,9 @@ async function handleSettingsUpdate(req, res) {
             s.app_icon_url || '/logos/app_icon.png',
             s.header_logo_url || '',
             s.csr_partners_content || '',
-            s.csr_home_title || 'CSR Funding & Support',
+            s.csr_home_title || 'Partners & Support',
             s.csr_home_subtitle || 'Empowering the local workforce through strategic corporate partnerships and community development initiatives.',
-            s.csr_page_title || 'CSR Partners',
+            s.csr_page_title || 'Our Partners',
             s.csr_page_subtitle || 'Recognizing the organizations that empower our local workforce and drive community growth.',
             s.pdf_footer_text || 'JobConnect by Local Authority. Powered by eglobe IT Solutions.',
             s.initiative_logo_url || '',
@@ -2295,7 +2448,8 @@ async function handleSettingsUpdate(req, res) {
             s.smtp_pass || '',
             s.smtp_sender || '',
             s.smtp_secure !== undefined ? (s.smtp_secure ? 1 : 0) : 0,
-            s.smtp_enabled !== undefined ? (s.smtp_enabled ? 1 : 0) : 0
+            s.smtp_enabled !== undefined ? (s.smtp_enabled ? 1 : 0) : 0,
+            s.admin_login_secret || null
         ];
 
         await db.execute(sql, params);
@@ -2357,7 +2511,8 @@ app.post('/api/admin/test-smtp', async (req, res) => {
 // CMS Pages
 app.get('/api/pages', async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT id, title, slug, is_active FROM cms_pages WHERE is_active = 1');
+        const role = req.query.role || 'public';
+        const [rows] = await db.query('SELECT id, title, slug, is_active, target_role FROM cms_pages WHERE is_active = 1 AND target_role = ?', [role]);
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -2370,7 +2525,15 @@ app.get('/api/pages/:slug', async (req, res) => {
         const { slug } = req.params;
         const [rows] = await db.query('SELECT * FROM cms_pages WHERE slug = ? AND is_active = 1', [slug]);
         if (rows.length === 0) return res.status(404).json({ error: 'Page not found' });
-        res.json(rows[0]);
+        
+        const page = rows[0];
+        if (page.target_role === 'employer') {
+            const role = req.query.role || req.headers['x-user-role'];
+            if (role !== 'employer' && role !== 'admin') {
+                return res.status(403).json({ error: 'Access denied: Only employers can view this page.' });
+            }
+        }
+        res.json(page);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch page' });
@@ -2389,7 +2552,7 @@ app.get('/api/admin/pages', async (req, res) => {
 
 app.post('/api/admin/pages', async (req, res) => {
     try {
-        const { title, slug, content, is_active } = req.body;
+        const { title, slug, content, is_active, target_role } = req.body;
         const trimmedTitle = title ? title.trim() : '';
         const trimmedSlug = slug ? slug.trim() : '';
         const trimmedContent = content ? content.trim() : '';
@@ -2398,7 +2561,7 @@ app.post('/api/admin/pages', async (req, res) => {
             return res.status(400).json({ error: 'Title, slug, and content are required and cannot be empty.' });
         }
 
-        await db.query('INSERT INTO cms_pages (title, slug, content, is_active) VALUES (?, ?, ?, ?)', [trimmedTitle, trimmedSlug, trimmedContent, is_active]);
+        await db.query('INSERT INTO cms_pages (title, slug, content, is_active, target_role) VALUES (?, ?, ?, ?, ?)', [trimmedTitle, trimmedSlug, trimmedContent, is_active, target_role || 'public']);
         res.json({ success: true, message: 'Page created' });
     } catch (err) {
         console.error(err);
@@ -2409,7 +2572,7 @@ app.post('/api/admin/pages', async (req, res) => {
 app.put('/api/admin/pages/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, slug, content, is_active } = req.body;
+        const { title, slug, content, is_active, target_role } = req.body;
         const trimmedTitle = title ? title.trim() : '';
         const trimmedSlug = slug ? slug.trim() : '';
         const trimmedContent = content ? content.trim() : '';
@@ -2418,7 +2581,7 @@ app.put('/api/admin/pages/:id', async (req, res) => {
             return res.status(400).json({ error: 'Title, slug, and content are required and cannot be empty.' });
         }
 
-        await db.query('UPDATE cms_pages SET title = ?, slug = ?, content = ?, is_active = ? WHERE id = ?', [trimmedTitle, trimmedSlug, trimmedContent, is_active, id]);
+        await db.query('UPDATE cms_pages SET title = ?, slug = ?, content = ?, is_active = ?, target_role = ? WHERE id = ?', [trimmedTitle, trimmedSlug, trimmedContent, is_active, target_role || 'public', id]);
         res.json({ success: true, message: 'Page updated' });
     } catch (err) {
         console.error(err);

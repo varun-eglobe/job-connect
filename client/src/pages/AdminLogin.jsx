@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({ identifier: '', password: '' });
+  const [isAuthorized, setIsAuthorized] = useState(null); // null: loading, true: authorized, false: unauthorized
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState(1); // 1: Login, 2: OTP
   const [transactionToken, setTransactionToken] = useState('');
@@ -13,6 +14,33 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkGatewaySecret = async () => {
+      try {
+        const response = await axios.get('/api/settings');
+        const configuredSecret = response.data.admin_login_secret;
+
+        if (!configuredSecret || configuredSecret.trim() === '') {
+          setIsAuthorized(true);
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const secretParam = params.get('secret');
+
+        if (secretParam === configuredSecret) {
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch (err) {
+        console.error("Failed to check administrative gateway secret:", err);
+        setIsAuthorized(true);
+      }
+    };
+    checkGatewaySecret();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -66,6 +94,28 @@ const AdminLogin = () => {
       navigate('/');
     }
   };
+
+  if (isAuthorized === null) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 font-sans">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-sm font-bold animate-pulse">Securing gateway connection...</p>
+      </div>
+    );
+  }
+
+  if (isAuthorized === false) {
+    return (
+      <div className="max-w-md mx-auto py-32 text-center font-sans">
+        <h1 className="text-9xl font-black text-slate-200">404</h1>
+        <h2 className="text-2xl font-bold text-slate-800 mt-6 mb-2">Page Not Found</h2>
+        <p className="text-slate-500 text-sm leading-relaxed mb-8">The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+        <Link to="/" className="inline-flex items-center justify-center h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-100">
+          Go Back Home
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto py-20 font-sans">

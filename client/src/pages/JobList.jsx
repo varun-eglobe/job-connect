@@ -732,7 +732,12 @@ const JobList = () => {
                           <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                           <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Age Limit</span>
                         </div>
-                        <p className="text-sm font-black text-slate-800">{job.age_range}</p>
+                        <p className="text-sm font-black text-slate-800">
+                          {job.age_range}
+                          {job.is_age_eligible === false && (
+                            <span className="text-[10px] text-red-500 font-extrabold ml-1">(Not Eligible)</span>
+                          )}
+                        </p>
                       </div>
                     )}
                     <div className="bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl p-3 transition-colors duration-200">
@@ -746,16 +751,16 @@ const JobList = () => {
                       <div className="border rounded-xl p-3 transition-colors duration-200 bg-indigo-50/50 hover:bg-indigo-50 border-indigo-200 shadow-sm shadow-indigo-50/50">
                         <div className="flex items-center gap-1 mb-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${
-                            ((job.token_count || 0) - (job.applied_count || 0) > 0) ? 'bg-indigo-600 animate-pulse' : 'bg-rose-500'
+                            ((job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : ((job.token_count || 0) - (job.applied_count || 0))) > 0) ? 'bg-indigo-600 animate-pulse' : 'bg-rose-500'
                           }`}></span>
                           <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-700">
                             Token Limit
                           </span>
                         </div>
                         <p className={`text-sm font-black ${
-                          ((job.token_count || 0) - (job.applied_count || 0) > 0) ? 'text-indigo-700' : 'text-rose-500'
+                          ((job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : ((job.token_count || 0) - (job.applied_count || 0))) > 0) ? 'text-indigo-700' : 'text-rose-500'
                         }`}>
-                          {`${Math.max(0, (job.token_count || 0) - (job.applied_count || 0))} Left of ${job.token_count || 0}`}
+                          {`${job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : Math.max(0, (job.token_count || 0) - (job.applied_count || 0))} Left`}
                         </p>
                       </div>
                     )}
@@ -806,14 +811,14 @@ const JobList = () => {
                         View Details
                       </Link>
 
-                      {isLoggedIn && role === 'candidate' && !!job.is_token_based && (
+                      {isLoggedIn && role === 'candidate' && !!job.is_token_based && job.is_age_eligible !== false && (
                         <div className="w-32 sm:w-36">
                           {Array.isArray(candidateApplications) && candidateApplications.some(app => app.job_id === job.id) ? (
                             <div className="w-full h-10 bg-emerald-50 border border-emerald-200 text-emerald-700 text-center text-xs font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 shadow-sm">
                               <Check size={14} strokeWidth={3} className="text-emerald-600" />
                               Applied
                             </div>
-                          ) : ((job.token_count || 0) - (job.applied_count || 0) > 0) ? (
+                          ) : ((job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : ((job.token_count || 0) - (job.applied_count || 0))) > 0) ? (
                             <button
                               onClick={() => handleOpenApplyModal(job)}
                               className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-center text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-blue-500/10 cursor-pointer"

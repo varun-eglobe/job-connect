@@ -14,9 +14,6 @@ async function test() {
     database: 'jobconnect_db'
   });
   
-  console.log("Cleaning up applications for Job 1 to start with clean slate...");
-  await db.query('DELETE FROM applications WHERE job_id = 1');
-
   // Let's find an active candidate
   const [candidates] = await db.query("SELECT id, name, phone FROM users WHERE role = 'candidate' LIMIT 1");
   if (candidates.length === 0) {
@@ -45,6 +42,9 @@ async function test() {
   }
 
   console.log(`✓ Found Token-based Job: "${tokenJob.title}" (ID: ${tokenJob.id})`);
+
+  console.log(`Cleaning up applications for Job ${tokenJob.id} to start with clean slate...`);
+  await db.query('DELETE FROM applications WHERE job_id = ?', [tokenJob.id]);
 
   // 2. Apply to the job
   console.log(`Applying for job ${tokenJob.id} as candidate ${candidate.id}...`);

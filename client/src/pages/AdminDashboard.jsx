@@ -115,7 +115,7 @@ const AdminDashboard = () => {
                 <div>
                     <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
                         <ShieldCheck size={16} />
-                        Corporation Control Panel
+                        Control Panel
                     </div>
                     <div className="flex items-center gap-4">
                         <h1 className="text-3xl font-extrabold text-slate-900">Admin Management</h1>

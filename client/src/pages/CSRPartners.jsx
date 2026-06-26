@@ -50,7 +50,7 @@ const CSRPartners = () => {
                             <Building2 size={32} />
                         </div>
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">{settings?.csr_page_title || 'CSR Partners'}</h1>
+                    <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">{settings?.csr_page_title || 'Our Partners'}</h1>
                     <p className="text-slate-500 max-w-2xl mx-auto text-lg leading-relaxed">
                         {settings?.csr_page_subtitle || 'Recognizing the organizations that empower our local workforce and drive community growth.'}
                     </p>

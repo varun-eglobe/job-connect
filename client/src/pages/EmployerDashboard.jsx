@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Briefcase, Clock, CheckCircle2, AlertCircle, Pencil, MapPin, Phone, User, Globe, ShieldCheck, Eye, Users, Calendar, Lock, Printer } from 'lucide-react';
+import { Plus, Briefcase, Clock, CheckCircle2, AlertCircle, Pencil, MapPin, Phone, User, Globe, ShieldCheck, Eye, Users, Calendar, Lock, Printer, ChevronRight } from 'lucide-react';
 
 const getTodayString = () => {
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
   const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getTomorrowString = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const year = tomorrow.getFullYear();
+  const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+  const day = String(tomorrow.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
@@ -89,6 +98,7 @@ const EmployerDashboard = () => {
   const [showPostingForm, setShowPostingForm] = useState(false);
   const [editingJobId, setEditingJobId] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [docPages, setDocPages] = useState([]);
 
   const formatSalary = (range) => {
     if (!range) return 'Not set';
@@ -192,11 +202,21 @@ const EmployerDashboard = () => {
       }
     };
 
+    const fetchDocPages = async () => {
+      try {
+        const response = await axios.get('/api/pages?role=employer');
+        setDocPages(response.data || []);
+      } catch (err) {
+        console.error("Error fetching documentation pages", err);
+      }
+    };
+
     if (employerId) {
       fetchStatus();
       fetchJobs();
       fetchLocations();
       fetchSettings();
+      fetchDocPages();
       const interval = setInterval(() => {
         fetchStatus();
         fetchJobs();
@@ -207,6 +227,11 @@ const EmployerDashboard = () => {
 
   const handlePostJob = async (e) => {
     e.preventDefault();
+    
+    if (!formData.age_range || !formData.age_range.trim()) {
+      setMessage({ type: 'error', text: 'Age Range is required.' });
+      return;
+    }
     
     const parentLocObj = locations.find(l => l.name === parentName && !l.parent_id);
     const subPlacesForParent = parentLocObj ? locations.filter(l => l.parent_id === parentLocObj.id) : [];
@@ -567,6 +592,50 @@ const EmployerDashboard = () => {
         </div>
       </div>
 
+      {/* Employer Help & Documentation Section */}
+      {docPages.length > 0 && (
+        <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/40 blur-[100px] -mr-32 -mt-32" />
+          
+          <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Employer Help & Documentation</h3>
+              <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Guides, compliance tutorials, and official platform user manuals.</p>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest">
+              <Clock size={12} />
+              Official Resources
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            {docPages.map(page => (
+              <Link 
+                key={page.id}
+                to={`/page/${page.slug}`}
+                className="group p-6 bg-slate-50 hover:bg-indigo-50/50 border border-slate-100 hover:border-indigo-100 rounded-3xl transition-all duration-300 flex flex-col justify-between hover:shadow-lg hover:shadow-indigo-500/5 cursor-pointer"
+              >
+                <div className="space-y-3">
+                  <div className="w-12 h-12 bg-white group-hover:bg-indigo-600 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm border border-slate-100 group-hover:border-indigo-600 text-xl font-black">
+                    📄
+                  </div>
+                  <h4 className="font-extrabold text-slate-800 group-hover:text-indigo-900 transition-colors text-base line-clamp-1 leading-tight">
+                    {page.title}
+                  </h4>
+                  <p className="text-slate-400 text-xs leading-relaxed group-hover:text-indigo-700/70 transition-colors font-medium">
+                    Learn about compliance, verification guidelines, or platform rules in this comprehensive manual.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-6 pt-4 border-t border-slate-200/50 group-hover:border-indigo-100 transition-colors">
+                  <span>Read Guide</span>
+                  <ChevronRight size={14} className="transform group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Your Listings Section */}
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-4 py-4 sm:p-8 border-b border-slate-50 flex items-center justify-between gap-3">
@@ -599,7 +668,11 @@ const EmployerDashboard = () => {
           ) : (
             <div className="flex flex-col gap-4">
               {jobs.map(job => {
-                const isExpired = job.expiry_date && getLocalDateString(job.expiry_date) < getTodayString();
+                const isExpired = job.expiry_date && (
+                  job.is_token_based 
+                    ? getLocalDateString(job.expiry_date) <= getTodayString()
+                    : getLocalDateString(job.expiry_date) < getTodayString()
+                );
                 return (
                   <div key={job.id} className={`rounded-2xl border overflow-hidden transition-all duration-200 ${isExpired ? 'border-red-100 bg-red-50/30' : 'border-slate-100 bg-white hover:border-blue-100 hover:shadow-md hover:shadow-blue-500/5'}`}>
                     
@@ -724,9 +797,9 @@ const EmployerDashboard = () => {
                           </div>
                           {!!job.is_token_based && (
                             <div className="flex-1 px-3 py-2 text-center border-r border-slate-100 bg-indigo-50/10">
-                              <p className="text-[9px] uppercase tracking-widest text-indigo-500 font-bold leading-none mb-1">Tokens</p>
-                              <p className="text-xs font-black text-indigo-700 leading-none" title={`${job.applied_count || 0} applied of ${job.token_count || 0} total`}>
-                                {job.token_count || 0}
+                              <p className="text-[9px] uppercase tracking-widest text-indigo-500 font-bold leading-none mb-1">Tokens Left</p>
+                              <p className="text-xs font-black text-indigo-700 leading-none" title={`${job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : Math.max(0, job.token_count - (job.applied_count || 0))} remaining of ${job.active_total_tokens !== undefined ? job.active_total_tokens : job.token_count} total`}>
+                                {job.active_remaining_tokens !== undefined ? job.active_remaining_tokens : Math.max(0, job.token_count - (job.applied_count || 0))}
                               </p>
                             </div>
                           )}
@@ -873,13 +946,14 @@ const EmployerDashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Age Range (Optional)</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Age Range <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       placeholder="e.g. 18 - 35"
                       className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
                       value={formData.age_range || ''}
                       onChange={(e) => setFormData({...formData, age_range: e.target.value})}
+                      required
                     />
                   </div>
                   <div>
@@ -1099,6 +1173,7 @@ const EmployerDashboard = () => {
                                       type="date"
                                       required
                                       disabled={isLocked}
+                                      min={getTomorrowString()}
                                       className={`h-8 px-2 rounded border outline-none w-full text-xs font-semibold transition-colors ${
                                         isLocked
                                           ? 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed'

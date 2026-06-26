@@ -17,7 +17,10 @@ const EmployerDetail = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get(`/api/employers/${id}`);
+        const role = localStorage.getItem('role');
+        const userId = localStorage.getItem('user_id');
+        const url = (role === 'candidate' && userId) ? `/api/employers/${id}?candidate_id=${userId}` : `/api/employers/${id}`;
+        const response = await axios.get(url);
         setEmployer(response.data.employer);
         setJobs(response.data.jobs || []);
       } catch (err) {

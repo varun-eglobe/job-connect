@@ -176,21 +176,21 @@ const Landing = () => {
       )}
 
       {/* CSR Funding & Partners Section */}
-      <div className="w-full max-w-5xl px-4 mt-16 md:mt-24 mb-16 md:mb-24 z-10">
-        <div className="bg-white p-10 md:p-16 rounded-[3rem] border border-slate-100 shadow-2xl shadow-blue-500/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:bg-blue-100 transition-colors duration-700"></div>
-          
-          <div className="relative z-10">
-            <div className="flex flex-col items-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-black text-slate-900">{settings?.csr_home_title || 'CSR Funding & Support'}</h2>
-              <p className="text-slate-500 text-sm mt-3 max-w-xl mx-auto italic leading-relaxed">
-                {settings?.csr_home_subtitle || 'Empowering the local workforce through strategic corporate partnerships and community development initiatives.'}
-              </p>
-            </div>
+      {csrPartners.length > 0 && (
+        <div className="w-full max-w-5xl px-4 mt-16 md:mt-24 mb-16 md:mb-24 z-10">
+          <div className="bg-white p-10 md:p-16 rounded-[3rem] border border-slate-100 shadow-2xl shadow-blue-500/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:bg-blue-100 transition-colors duration-700"></div>
+            
+            <div className="relative z-10">
+              <div className="flex flex-col items-center mb-12">
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900">{settings?.csr_home_title || 'Partners & Support'}</h2>
+                <p className="text-slate-500 text-sm mt-3 max-w-xl mx-auto italic leading-relaxed">
+                  {settings?.csr_home_subtitle || 'Empowering the local workforce through strategic corporate partnerships and community development initiatives.'}
+                </p>
+              </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-16 items-center justify-items-center transition-all duration-1000">
-              {csrPartners.length > 0 ? (
-                csrPartners.slice(0, 8).map(partner => (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-16 items-center justify-items-center transition-all duration-1000">
+                {csrPartners.slice(0, 8).map(partner => (
                   <div key={partner.id} className="w-full h-24 md:h-auto flex flex-col items-center justify-center p-4 md:p-0 bg-white md:bg-transparent rounded-2xl border border-slate-100 md:border-transparent shadow-sm md:shadow-none group/logo transition-all">
                     <img 
                       src={partner.logo_url} 
@@ -198,27 +198,9 @@ const Landing = () => {
                       className="h-8 md:h-12 w-auto max-w-[80%] object-contain transition-transform group-hover/logo:scale-110"
                     />
                   </div>
-                ))
-              ) : (
-                <>
-                  {/* Fallback to original logos if none in DB */}
-                  <div className="w-full h-24 md:h-auto flex items-center justify-center p-4 md:p-0 bg-white md:bg-transparent rounded-2xl border border-slate-100 md:border-transparent shadow-sm md:shadow-none group/logo">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/UST_Global_logo.svg/1200px-UST_Global_logo.svg.png" alt="UST" className="h-8 md:h-10 w-auto object-contain transition-transform group-hover/logo:scale-110" />
-                  </div>
-                  <div className="w-full h-24 md:h-auto flex items-center justify-center p-4 md:p-0 bg-white md:bg-transparent rounded-2xl border border-slate-100 md:border-transparent shadow-sm md:shadow-none group/logo">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/IBS_Software_Logo.svg/1280px-IBS_Software_Logo.svg.png" alt="IBS Software" className="h-6 md:h-8 w-auto object-contain transition-transform group-hover/logo:scale-110" />
-                  </div>
-                  <div className="w-full h-24 md:h-auto flex items-center justify-center p-4 md:p-0 bg-white md:bg-transparent rounded-2xl border border-slate-100 md:border-transparent shadow-sm md:shadow-none group/logo">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Allianz.svg/1280px-Allianz.svg.png" alt="Allianz" className="h-8 md:h-10 w-auto object-contain transition-transform group-hover/logo:scale-110" />
-                  </div>
-                  <div className="w-full h-24 md:h-auto flex items-center justify-center p-4 md:p-0 bg-white md:bg-transparent rounded-2xl border border-slate-100 md:border-transparent shadow-sm md:shadow-none group/logo">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Muthoot_Finance_Logo.svg/1280px-Muthoot_Finance_Logo.svg.png" alt="Muthoot Finance" className="h-10 md:h-12 w-auto object-contain transition-transform group-hover/logo:scale-110" />
-                  </div>
-                </>
-              )}
-            </div>
+                ))}
+              </div>
 
-            {csrPartners.length > 0 && (
               <div className="mt-12 text-center">
                 <Link 
                   to="/csr-partners" 
@@ -228,10 +210,10 @@ const Landing = () => {
                   <span className="w-8 h-px bg-blue-200 group-hover:w-12 group-hover:bg-blue-600 transition-all"></span>
                 </Link>
               </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   );

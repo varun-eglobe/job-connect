@@ -1,0 +1,73 @@
+                        {activeTab === 'pages' && can('manage_pages') && (
+                            <div className="animate-in fade-in duration-500">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                    <div><h2 className="text-xl font-black text-slate-800">Platform Custom Pages</h2><p className="text-sm text-slate-500">Create policies, terms, and informational content.</p></div>
+                                    {!editingPage && <button onClick={() => setEditingPage({ title: '', slug: '', content: '', is_active: true })} className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-black transition-all"><Plus size={20} /> Create Page</button>}
+                                </div>
+                                <div className="p-8">
+                                    {editingPage ? (
+                                        <div className="space-y-6">
+                                            <div className="flex flex-col md:flex-row gap-6">
+                                                <div className="flex-1 space-y-2"><label className="text-xs font-black text-slate-400 uppercase ml-1">Page Title</label><input className="w-full h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none placeholder:text-slate-300 placeholder:font-normal" value={editingPage.title} onChange={(e) => setEditingPage({...editingPage, title: e.target.value})} placeholder="e.g. User Agreement" /></div>
+                                                <div className="flex-1 space-y-2"><label className="text-xs font-black text-slate-400 uppercase ml-1">Friendly URL (Slug)</label><div className="flex items-center gap-2"><span className="text-slate-300 text-sm font-mono italic">/page/</span><input className="flex-1 h-12 px-5 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-sm outline-none placeholder:text-slate-300 placeholder:font-normal" value={editingPage.slug} onChange={(e) => setEditingPage({...editingPage, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} placeholder="user-agreement" /></div></div>
+                                            </div>
+                                            <div className="space-y-2"><label className="text-xs font-black text-slate-400 uppercase ml-1">Page Content (Visual Editor)</label><WYSIWYG value={editingPage.content} onChange={(content) => setEditingPage({...editingPage, content})} placeholder="Focus on the details..." /></div>
+                                            <div className="flex justify-between items-center pt-8 border-t border-slate-50">
+                                                <label className="flex items-center gap-3 cursor-pointer group"><div className={`w-12 h-6 rounded-full transition-all relative ${editingPage.is_active ? 'bg-green-500' : 'bg-slate-200'}`}><div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${editingPage.is_active ? 'left-7' : 'left-1'}`} /></div><input type="checkbox" className="hidden" checked={editingPage.is_active} onChange={(e) => setEditingPage({...editingPage, is_active: e.target.checked})} /><span className="text-sm font-black text-slate-600 uppercase tracking-wider">Publish Page</span></label>
+                                                <div className="flex gap-3"><button onClick={() => setEditingPage(null)} className="px-6 py-3 text-sm font-bold text-slate-400 hover:text-slate-600">Cancel</button><button onClick={handleSavePage} className="px-10 py-3 bg-blue-600 font-bold text-white rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">Save Changes</button></div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            {pages.length === 0 ? (
+                                                <div className="text-center py-16 text-slate-400">
+                                                    <div className="text-4xl mb-3">📄</div>
+                                                    <p className="font-bold text-slate-500">No pages yet</p>
+                                                    <p className="text-sm mt-1">Click <span className="font-bold">Create Page</span> to add your first custom page.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full">
+                                                        <thead>
+                                                            <tr className="border-b border-slate-100">
+                                                                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3 pl-1">Page Title</th>
+                                                                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">URL Slug</th>
+                                                                <th className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3">Status</th>
+                                                                <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pb-3 pr-1">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-50">
+                                                            {pages.map(page => (
+                                                                <tr key={page.id} className="group hover:bg-slate-50/70 transition-colors">
+                                                                    <td className="py-4 pl-1">
+                                                                        <span className="font-bold text-slate-800 text-sm">{page.title}</span>
+                                                                    </td>
+                                                                    <td className="py-4">
+                                                                        <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">/page/{page.slug}</span>
+                                                                    </td>
+                                                                    <td className="py-4 text-center">
+                                                                        <span className={`inline-flex px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${page.is_active ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-500'}`}>
+                                                                            {page.is_active ? 'Live' : 'Draft'}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="py-4 pr-1">
+                                                                        <div className="flex gap-1 justify-end">
+                                                                            <button onClick={() => setEditingPage(page)} className="p-2 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors" title="Edit">
+                                                                                <Edit3 size={15} />
+                                                                            </button>
+                                                                            <button onClick={() => handleDeletePage(page.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-colors" title="Delete">
+                                                                                <Trash2 size={15} />
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}

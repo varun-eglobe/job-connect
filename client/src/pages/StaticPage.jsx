@@ -7,15 +7,25 @@ const StaticPage = () => {
     const { slug } = useParams();
     const [page, setPage] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [errorStatus, setErrorStatus] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPage = async () => {
             try {
-                const res = await axios.get(`/api/pages/${slug}`);
+                const role = localStorage.getItem('role');
+                const res = await axios.get(`/api/pages/${slug}`, { params: { role } });
                 setPage(res.data);
+                setErrorStatus(null);
             } catch (err) {
                 console.error("Page fetch failed", err);
+                if (err.response?.status === 403) {
+                    setErrorStatus(403);
+                } else if (err.response?.status === 404) {
+                    setErrorStatus(404);
+                } else {
+                    setErrorStatus(500);
+                }
             } finally {
                 setLoading(false);
             }
@@ -24,7 +34,19 @@ const StaticPage = () => {
     }, [slug]);
 
     if (loading) return <div className="p-20 text-center text-slate-400">Loading content...</div>;
-    if (!page) return (
+    
+    if (errorStatus === 403 || (page && page.target_role === 'employer' && localStorage.getItem('role') !== 'employer' && localStorage.getItem('role') !== 'admin')) {
+        return (
+            <div className="p-20 text-center flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-2xl font-black mb-4">🔐</div>
+                <h1 className="text-3xl font-black text-slate-800 mb-2">Access Denied</h1>
+                <p className="text-slate-500 max-w-md mb-6 text-sm">This documentation is reserved strictly for registered employers. If you are an employer, please ensure you are logged in to your account.</p>
+                <button onClick={() => navigate('/')} className="px-8 h-12 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all flex items-center gap-2">Back to Home</button>
+            </div>
+        );
+    }
+    
+    if (errorStatus === 404 || !page) return (
         <div className="p-20 text-center">
             <h1 className="text-2xl font-bold text-slate-800">404 - Page Not Found</h1>
             <button onClick={() => navigate('/')} className="mt-4 text-blue-600 font-bold hover:underline">Back to Home</button>

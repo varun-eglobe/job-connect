@@ -63,12 +63,13 @@ function Navigation({ appName, logoUrl }) {
 
   const handleLogout = () => {
     const currentRole = localStorage.getItem('role');
+    const secret = localStorage.getItem('admin_login_secret');
     localStorage.clear();
     setRole(null);
     setUserName(null);
     setCompanyName(null);
     if (currentRole === 'admin') {
-      window.location.href = '/admin-login';
+      window.location.href = secret ? `/admin-login?secret=${secret}` : '/admin-login';
     } else {
       window.location.href = '/login';
     }
@@ -482,6 +483,11 @@ function App() {
           localStorage.setItem('app_name', newName);
           localStorage.setItem('logo_url', newLogo);
           localStorage.setItem('custom_footer', res.data.pdf_footer_text || '');
+          if (res.data.admin_login_secret) {
+            localStorage.setItem('admin_login_secret', res.data.admin_login_secret);
+          } else {
+            localStorage.removeItem('admin_login_secret');
+          }
 
           document.title = `${newName} | Job Portal`;
 
