@@ -57,6 +57,7 @@ const CandidateDashboard = () => {
   const displayedApplications = activeFilter === 'upcoming' ? upcomingApplications : finishedApplications;
 
   useEffect(() => {
+    document.title = 'Candidate Dashboard - Job Connect';
     const fetchApplications = async () => {
       if (!userId) {
         setLoading(false);

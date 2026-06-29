@@ -40,6 +40,7 @@ const AdminDashboard = () => {
     };
 
     useEffect(() => {
+        document.title = 'Admin Control Center - Job Connect';
         fetchEmployers();
     }, []);
 

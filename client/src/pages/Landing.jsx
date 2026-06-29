@@ -68,6 +68,7 @@ const Landing = () => {
 
 
   useEffect(() => {
+    document.title = 'Job Connect - Find Local Jobs and Verified Employers';
     const fetchData = async () => {
       try {
         const [settingsRes, testimonialRes, csrRes] = await Promise.all([

@@ -16,6 +16,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = 'Admin Sign In - Job Connect';
     const checkGatewaySecret = async () => {
       try {
         const response = await axios.get('/api/settings');
@@ -33,6 +34,7 @@ const AdminLogin = () => {
           setIsAuthorized(true);
         } else {
           setIsAuthorized(false);
+          document.title = 'Page Not Found - Job Connect';
         }
       } catch (err) {
         console.error("Failed to check administrative gateway secret:", err);

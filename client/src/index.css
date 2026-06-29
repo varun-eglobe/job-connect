@@ -170,3 +170,14 @@ html {
     color: #2563eb;
     font-weight: 800;
 }
+
+/* Validation Errors styling */
+.validation-error-text {
+  color: #dc2626 !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+}
+
+.validation-error-box {
+  color: #dc2626 !important;
+}

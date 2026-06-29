@@ -54,12 +54,32 @@ checkDbConnection();
     }
 })();
 
+// Add custom script injection columns to site_settings if they don't exist
+(async () => {
+    try {
+        const columnsToAdd = [
+            { name: 'custom_head_code', type: 'TEXT DEFAULT NULL' },
+            { name: 'custom_body_open_code', type: 'TEXT DEFAULT NULL' },
+            { name: 'custom_body_close_code', type: 'TEXT DEFAULT NULL' }
+        ];
+        for (const col of columnsToAdd) {
+            const [cols] = await db.query(`SHOW COLUMNS FROM site_settings LIKE '${col.name}'`);
+            if (cols.length === 0) {
+                await db.query(`ALTER TABLE site_settings ADD COLUMN ${col.name} ${col.type}`);
+                console.log(`✓ Added '${col.name}' to site_settings table.`);
+            }
+        }
+    } catch (err) {
+        console.error('Failed to add script injection columns to site_settings:', err.message);
+    }
+})();
+
 // Helper: log an admin action
 async function logActivity(req, action, targetType, targetId, targetLabel) {
     try {
-        const adminId   = req.headers['x-admin-id']   || null;
+        const adminId = req.headers['x-admin-id'] || null;
         const adminName = req.headers['x-admin-name'] || 'Unknown';
-        const adminEmail= req.headers['x-admin-email']|| null;
+        const adminEmail = req.headers['x-admin-email'] || null;
         const ip = req.headers['x-forwarded-for'] || req.ip || null;
         await db.query(
             'INSERT INTO admin_activity_log (admin_id, admin_name, admin_email, action, target_type, target_id, target_label, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -119,14 +139,14 @@ function matchesAgeRange(candidateAge, ageRangeStr) {
         return candidateAge >= val;
     }
 
-    return true; 
+    return true;
 }
 
 async function sendTwilioSms(twilioSid, twilioAuthToken, twilioPhone, toPhone, messageBody) {
     try {
         const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
         const auth = Buffer.from(`${twilioSid}:${twilioAuthToken}`).toString('base64');
-        
+
         let formattedTo = toPhone.trim();
         if (!formattedTo.startsWith('+')) {
             formattedTo = '+' + formattedTo;
@@ -143,7 +163,7 @@ async function sendTwilioSms(twilioSid, twilioAuthToken, twilioPhone, toPhone, m
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         });
-        
+
         console.log(`Twilio SMS sent successfully. SID: ${response.data.sid}`);
         return true;
     } catch (err) {
@@ -154,14 +174,14 @@ async function sendTwilioSms(twilioSid, twilioAuthToken, twilioPhone, toPhone, m
 
 function getPossiblePhoneNumbers(identifier, countryPhoneCode) {
     if (!/^\+?\d+$/.test(identifier)) return [];
-    
+
     const clean = identifier.replace(/\D/g, '');
     const list = new Set();
-    
+
     // Add raw clean number
     list.add(clean);
     list.add(`+${clean}`);
-    
+
     // If it starts with the country phone code, also get the sliced local number
     if (clean.startsWith(countryPhoneCode)) {
         const sliced = clean.slice(countryPhoneCode.length);
@@ -171,7 +191,7 @@ function getPossiblePhoneNumbers(identifier, countryPhoneCode) {
         // If it doesn't start with the country phone code, add the country phone code prepended version
         list.add(`${countryPhoneCode}${clean}`);
         list.add(`+${countryPhoneCode}${clean}`);
-        
+
         // If there is a leading zero, e.g. 0501234567, try stripping it and prepending country code
         if (clean.startsWith('0')) {
             const strippedZero = clean.slice(1);
@@ -181,20 +201,20 @@ function getPossiblePhoneNumbers(identifier, countryPhoneCode) {
             list.add(`+${countryPhoneCode}${strippedZero}`);
         }
     }
-    
+
     // Also include the legacy fallback: slice last 10 digits
     if (clean.length > 10) {
         const last10 = clean.slice(-10);
         list.add(last10);
         list.add(`+${last10}`);
     }
-    
+
     return Array.from(list);
 }
 
 function generateEmailHtml(appName, logoUrl, subject, text) {
     let bodyContent = text.replace(/\n/g, '<br>');
-    
+
     // Auto-detect OTP code (4 to 6 digits) and render a premium verification badge (only for verification/otp related emails)
     const isOtpEmail = /otp|verification|security|verify|code/i.test(subject) || /otp|verification|security|verify|code/i.test(text);
     const otpMatch = isOtpEmail ? text.match(/\b\d{4,6}\b/) : null;
@@ -310,7 +330,7 @@ async function sendSmtpEmail(to, subject, text, html) {
     try {
         const [settingsRows] = await db.query('SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender, smtp_secure, smtp_enabled, app_name, header_logo_url FROM site_settings WHERE id = 1');
         const config = settingsRows && settingsRows[0];
-        
+
         if (!config || config.smtp_enabled !== 1) {
             console.log('SMTP is disabled or not configured in site settings.');
             return false;
@@ -360,7 +380,7 @@ async function generateAndSendOtp(phone, reason) {
     try {
         const [settings] = await db.query('SELECT twilio_sid, twilio_auth_token, twilio_phone_number, twilio_enabled FROM site_settings WHERE id = 1');
         const config = settings && settings[0];
-        
+
         if (config && config.twilio_enabled === 1 && config.twilio_sid && config.twilio_auth_token && config.twilio_phone_number) {
             otpCode = Math.floor(1000 + Math.random() * 9000).toString();
             const messageBody = `Your Job Connect OTP for ${reason} is: ${otpCode}. Valid for 5 minutes.`;
@@ -527,18 +547,18 @@ function parseTimeStrToMinutes(timeStr) {
     const clean = timeStr.trim().toLowerCase();
     let hours = 0;
     let minutes = 0;
-    
+
     // Check if there is AM/PM
     const isPm = clean.includes('pm');
     const isAm = clean.includes('am');
-    
+
     // Strip AM/PM and split by colon
     const timePart = clean.replace(/am|pm/g, '').trim();
     const parts = timePart.split(':');
-    
+
     hours = parseInt(parts[0], 10) || 0;
     minutes = parseInt(parts[1], 10) || 0;
-    
+
     if (isPm && hours < 12) {
         hours += 12;
     } else if (isAm && hours === 12) {
@@ -565,7 +585,7 @@ async function attachActiveTokenCounts(job) {
     const [appRows] = await db.execute('SELECT token_number FROM applications WHERE job_id = ?', [job.id]);
     const usedTokens = new Set(appRows.map(r => r.token_number).filter(n => n !== null));
     const todayStr = getLocalTodayString();
-    
+
     const d = new Date();
     const currentLocalTimeStr = [
         String(d.getHours()).padStart(2, '0'),
@@ -675,7 +695,7 @@ app.get('/api/jobs', async (req, res) => {
                 candidateAge = age;
             }
         }
-        
+
         // Base query
         let query = 'SELECT jobs.*, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count, users.company_name, users.address, users.google_map_link, users.is_verified, users.is_gst_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE users.is_deleted_by_admin = 0';
         let countQuery = 'SELECT COUNT(*) as total FROM jobs JOIN users ON jobs.employer_id = users.id WHERE users.is_deleted_by_admin = 0';
@@ -685,7 +705,7 @@ app.get('/api/jobs', async (req, res) => {
         if (!employer_id) {
             const today = getLocalTodayString();
             const candidate_id = req.query.candidate_id;
-            
+
             if (candidate_id) {
                 query += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
                 countQuery += ' AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND (jobs.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < jobs.token_count OR EXISTS (SELECT 1 FROM applications WHERE applications.job_id = jobs.id AND applications.candidate_id = ?))';
@@ -765,12 +785,12 @@ app.get('/api/jobs', async (req, res) => {
             query += ' AND users.is_verified = 1';
             countQuery += ' AND users.is_verified = 1';
         }
-        
+
         let rows, total;
         // Standard SQL query with limit & offset
         const finalQuery = query + ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
         const queryParams = [...params, limit, offset];
-        
+
         const fs = require('fs');
         const logMsg = `[${new Date().toISOString()}]
 SQL: ${finalQuery}
@@ -784,11 +804,11 @@ Count Params: ${JSON.stringify(countParams)}
         const [totalRows] = await db.query(countQuery, countParams);
         rows = dbRows;
         total = totalRows[0].total;
-        
+
         rows.forEach(job => {
             job.is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, job.age_range) : true;
         });
-        
+
         await Promise.all(rows.map(job => attachActiveTokenCounts(job)));
 
         res.json({
@@ -810,12 +830,12 @@ app.get('/api/jobs/:id', async (req, res) => {
     try {
         const today = getLocalTodayString();
         const candidate_id = req.query.candidate_id;
-        
+
         let [jobs] = await db.execute(
             'SELECT jobs.*, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count, users.company_name, users.address, users.google_map_link, users.email, users.phone, users.is_verified, users.is_gst_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE jobs.id = ? AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND users.is_approved = 1 AND users.is_deleted_by_admin = 0',
             [req.params.id, today, today]
         );
-        
+
         if (jobs.length === 0) {
             // Fallback for employer who created the job to view it
             const [fallbackJobs] = await db.execute(
@@ -828,7 +848,7 @@ app.get('/api/jobs/:id', async (req, res) => {
                 return res.status(404).json({ error: 'Job not found' });
             }
         }
-        
+
         let candidateAge = null;
         if (candidate_id) {
             const [candidateRows] = await db.execute('SELECT dob FROM users WHERE id = ?', [candidate_id]);
@@ -843,20 +863,20 @@ app.get('/api/jobs/:id', async (req, res) => {
                 candidateAge = age;
             }
         }
-        
+
         jobs[0].is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, jobs[0].age_range) : true;
-        
+
         await attachActiveTokenCounts(jobs[0]);
 
         const [similarJobs] = await db.execute(
             'SELECT jobs.*, users.company_name, users.is_verified FROM jobs JOIN users ON jobs.employer_id = users.id WHERE jobs.id != ? AND jobs.status = "active" AND (jobs.expiry_date IS NULL OR (jobs.is_token_based = 0 AND jobs.expiry_date >= ?) OR (jobs.is_token_based = 1 AND jobs.expiry_date > ?)) AND (jobs.job_type = ? OR jobs.location = ?) AND users.is_approved = 1 AND users.is_deleted_by_admin = 0 ORDER BY created_at DESC LIMIT 3',
             [req.params.id, today, today, jobs[0].job_type, jobs[0].location]
         );
-        
+
         similarJobs.forEach(simJob => {
             simJob.is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, simJob.age_range) : true;
         });
-        
+
         res.json({ job: jobs[0], similarJobs });
     } catch (err) {
         console.error(err);
@@ -880,7 +900,7 @@ app.get('/api/top-searches', async (req, res) => {
             ORDER BY total_vacancies DESC
             LIMIT 5
         `, [today, today]);
-        
+
         res.json(rows.map(row => row.title));
     } catch (err) {
         console.error(err);
@@ -892,13 +912,13 @@ app.get('/api/top-searches', async (req, res) => {
 app.post('/api/jobs', async (req, res) => {
     try {
         const { employer_id, title, description, location, job_type, vacancies_count, expiry_date, contact_person, contact_phone, status, is_urgent, salary_range, is_token_based, token_count, token_split, token_slots, age_range, qualification } = req.body;
-        
+
         if (!age_range || !String(age_range).trim()) {
             return res.status(400).json({ error: 'Age Range is required.' });
         }
-        
+
         const [users] = await db.execute('SELECT payment_status FROM users WHERE id = ? AND is_deleted_by_admin = 0', [employer_id]);
-        
+
         if (users.length === 0) return res.status(404).json({ error: 'Employer not found' });
         // Registration fee removed
         // if (users[0].payment_status !== 'paid') return res.status(403).json({ error: 'Registration fee not paid.' });
@@ -906,13 +926,13 @@ app.post('/api/jobs', async (req, res) => {
         // Get prefix from site_settings
         const [settings] = await db.execute('SELECT job_id_prefix FROM site_settings WHERE id = 1');
         const prefix = (settings && settings[0] && settings[0].job_id_prefix) || 'JC';
-        
+
         // Generate unique job_post_id
         const now = new Date();
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const yy = String(now.getFullYear()).slice(-2);
         const dateStr = `${mm}${yy}`;
-        
+
         let unique = false;
         let jobPostId = '';
         let attempts = 0;
@@ -965,20 +985,20 @@ app.put('/api/jobs/:id', async (req, res) => {
 
         if (appliedCount > 0) {
             if (wasTokenBased && !isTokenBased) {
-                return res.status(400).json({ 
-                    error: `Cannot disable token-based management because candidates have already applied to this job (${appliedCount}).` 
+                return res.status(400).json({
+                    error: `Cannot disable token-based management because candidates have already applied to this job (${appliedCount}).`
                 });
             }
             if (isTokenBased) {
                 if (Number(token_count || 0) < appliedCount) {
-                    return res.status(400).json({ 
-                        error: `Token count cannot be less than the number of candidates who have already applied (${appliedCount}).` 
+                    return res.status(400).json({
+                        error: `Token count cannot be less than the number of candidates who have already applied (${appliedCount}).`
                     });
                 }
             }
         } else if (isTokenBased && Number(token_count || 0) <= 0) {
-            return res.status(400).json({ 
-                error: 'Token count must be greater than 0.' 
+            return res.status(400).json({
+                error: 'Token count must be greater than 0.'
             });
         }
 
@@ -1003,7 +1023,7 @@ app.post('/api/jobs/:id/apply', async (req, res) => {
     try {
         const jobId = req.params.id;
         const { candidate_id, candidate_name, candidate_phone } = req.body;
-        
+
         if (!candidate_id || !candidate_name || !candidate_phone) {
             return res.status(400).json({ error: 'Candidate ID, name, and phone are required to apply.' });
         }
@@ -1014,10 +1034,10 @@ app.post('/api/jobs/:id/apply', async (req, res) => {
             [jobId, candidate_id]
         );
         if (existing.length > 0) {
-            return res.status(400).json({ 
-                error: 'You have already applied for this job.', 
+            return res.status(400).json({
+                error: 'You have already applied for this job.',
                 already_applied: true,
-                application: existing[0] 
+                application: existing[0]
             });
         }
 
@@ -1165,19 +1185,26 @@ app.get('/api/jobs/:id/applications', async (req, res) => {
 app.get('/api/employers', async (req, res) => {
     try {
         const { search } = req.query;
+        const today = getLocalTodayString();
         let query = `
-            SELECT u.id, u.company_name, u.email, u.phone, u.is_verified, u.is_gst_verified, COUNT(j.id) as job_count
+            SELECT u.id, u.company_name, u.email, u.phone, u.is_verified, u.is_gst_verified, COALESCE(active_jobs.job_count, 0) as job_count
             FROM users u 
-            LEFT JOIN jobs j ON u.id = j.employer_id AND j.status = 'active'
+            LEFT JOIN (
+                SELECT employer_id, COUNT(*) as job_count
+                FROM jobs j
+                WHERE j.status = 'active'
+                  AND (j.expiry_date IS NULL OR (j.is_token_based = 0 AND j.expiry_date >= ?) OR (j.is_token_based = 1 AND j.expiry_date > ?))
+                  AND (j.is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = j.id) < j.token_count)
+                GROUP BY employer_id
+            ) active_jobs ON u.id = active_jobs.employer_id
             WHERE u.role = 'employer' AND u.is_approved = 1 AND u.is_deleted_by_admin = 0
         `;
-        const params = [];
+        const params = [today, today];
         if (search) {
             query += ` AND (LOWER(u.company_name) LIKE ? OR u.phone LIKE ?)`;
             params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
         }
-        query += ` GROUP BY u.id`;
-        
+
         const [rows] = await db.execute(query, params);
         res.json(rows);
     } catch (err) {
@@ -1191,21 +1218,21 @@ app.get('/api/employers/:id', async (req, res) => {
         const { id } = req.params;
         const today = getLocalTodayString();
         const candidate_id = req.query.candidate_id;
-        
+
         // Fetch company info
         const [companies] = await db.execute(
             'SELECT id, name, company_name, email, phone, address, google_map_link, is_verified, is_gst_verified, created_at FROM users WHERE id = ? AND role = "employer" AND is_deleted_by_admin = 0',
             [id]
         );
-        
+
         if (companies.length === 0) return res.status(404).json({ error: 'Employer not found' });
-        
+
         // Fetch their active jobs
         const [jobs] = await db.execute(
             'SELECT *, (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) as applied_count FROM jobs WHERE employer_id = ? AND status = "active" AND (expiry_date IS NULL OR (is_token_based = 0 AND expiry_date >= ?) OR (is_token_based = 1 AND expiry_date > ?)) AND (is_token_based = 0 OR (SELECT COUNT(*) FROM applications WHERE applications.job_id = jobs.id) < token_count) ORDER BY created_at DESC',
             [id, today, today]
         );
-        
+
         let candidateAge = null;
         if (candidate_id) {
             const [candidateRows] = await db.execute('SELECT dob FROM users WHERE id = ?', [candidate_id]);
@@ -1220,13 +1247,13 @@ app.get('/api/employers/:id', async (req, res) => {
                 candidateAge = age;
             }
         }
-        
+
         jobs.forEach(job => {
             job.is_age_eligible = candidateAge !== null ? matchesAgeRange(candidateAge, job.age_range) : true;
         });
-        
+
         await Promise.all(jobs.map(job => attachActiveTokenCounts(job)));
-        
+
         res.json({ employer: companies[0], jobs });
     } catch (err) {
         console.error(err);
@@ -1263,7 +1290,7 @@ app.post('/api/auth/register', async (req, res) => {
         console.log('--- REGISTER DEBUG ---');
         console.log('Body:', req.body);
         console.log('Extracted Phone:', phone);
-        
+
         if (!phone) {
             console.log('Validation failed: phone is missing');
             return res.status(400).json({ error: 'Mobile number is required' });
@@ -1291,11 +1318,11 @@ app.post('/api/auth/register', async (req, res) => {
                 return res.status(400).json({ error: 'Email address already registered' });
             }
         }
-        
+
         // Generate registration OTP
         const transactionToken = Math.random().toString(36).substring(2, 15);
         const otpResult = await generateAndSendOtp(phone, 'Registration');
-        const otpCode = otpResult.otpCode; 
+        const otpCode = otpResult.otpCode;
 
         pendingRegistrations.set(transactionToken, {
             data: { name, email, phone, password, role, company_name, address, google_map_link, gst_number, dob },
@@ -1431,6 +1458,18 @@ Job Connect System`;
 const pendingLogins = new Map();
 
 app.get('/api/auth/debug-accounts', async (req, res) => {
+    const origin = req.headers.origin || '';
+    const referer = req.headers.referer || '';
+    
+    const isAllowed = 
+        origin === 'http://localhost:5175' || 
+        origin === 'http://192.168.1.32:5175' ||
+        referer.startsWith('http://localhost:5175/') ||
+        referer.startsWith('http://192.168.1.32:5175/');
+
+    if (!isAllowed) {
+        return res.status(403).json({ error: 'Access denied: debug accounts are only accessible from authorized local development URLs' });
+    }
     try {
         const [rows] = await db.query('SELECT id, name, phone, email, password, role, company_name FROM users WHERE is_deleted_by_admin = 0');
         res.json(rows);
@@ -1444,29 +1483,29 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         let { identifier, password } = req.body;
         console.log(`Login attempt for: [${identifier}]`);
-        
+
         const [settingsRows] = await db.query('SELECT country_phone_code FROM site_settings WHERE id = 1');
         const countryPhoneCode = settingsRows[0]?.country_phone_code || '91';
-        
+
         let query = 'SELECT * FROM users WHERE (email = ?';
         let queryParams = [identifier];
-        
+
         const possiblePhones = getPossiblePhoneNumbers(identifier, countryPhoneCode);
         if (possiblePhones.length > 0) {
             query += ' OR phone IN (' + possiblePhones.map(() => '?').join(', ') + ')';
             queryParams.push(...possiblePhones);
         }
-        
+
         query += ') AND password = ? AND is_deleted_by_admin = 0';
         queryParams.push(password);
 
         const [rows] = await db.query(query, queryParams);
-        
+
         if (rows.length === 0) {
             console.log('Login failed: User not found or password mismatch');
             return res.status(401).json({ error: 'Invalid credentials' });
         }
-        
+
         const user = rows[0];
         // Don't allow admins to log in via standard user login endpoint
         if (user.role === 'admin') {
@@ -1478,13 +1517,13 @@ app.post('/api/auth/login', async (req, res) => {
             console.log(`Login failed: Email login blocked for user ID ${user.id} (role: ${user.role})`);
             return res.status(403).json({ error: 'Email login is not allowed for candidates and employers. Please log in using your registered mobile number.' });
         }
-        
+
         // Credentials valid, trigger OTP flow
         const transactionToken = Math.random().toString(36).substring(2, 15);
         const mobile = rows[0].phone;
         const otpResult = await generateAndSendOtp(mobile, 'Login');
         const otpCode = otpResult.otpCode;
-        
+
         pendingLogins.set(transactionToken, {
             user: rows[0],
             otp: otpCode,
@@ -1493,8 +1532,8 @@ app.post('/api/auth/login', async (req, res) => {
 
         console.log(`OTP generated for ${identifier}: ${otpCode} (Token: ${transactionToken}) [${otpResult.sent ? 'Twilio Mode' : 'Local Mode'}]`);
 
-        res.json({ 
-            otp_required: true, 
+        res.json({
+            otp_required: true,
             transaction_token: transactionToken,
             message: otpResult.sent ? 'OTP sent to your registered mobile number' : 'OTP generated (Dev Mode: 9999)'
         });
@@ -1508,28 +1547,28 @@ app.post('/api/auth/admin-login', async (req, res) => {
     try {
         let { identifier, password } = req.body;
         console.log(`Admin gateway login attempt for: [${identifier}]`);
-        
+
         // Query user and enforce role = 'admin'
         const [rows] = await db.query('SELECT * FROM users WHERE email = ? AND role = "admin" AND password = ? AND is_deleted_by_admin = 0', [identifier, password]);
-        
+
         if (rows.length === 0) {
             console.log('Admin login failed: Admin user not found or password mismatch');
             return res.status(401).json({ error: 'Invalid administrator credentials' });
         }
-        
+
         // Credentials valid, trigger OTP flow
         const transactionToken = Math.random().toString(36).substring(2, 15);
         const adminEmail = rows[0].email || '';
         const adminMobile = rows[0].phone || '';
-        
+
         let otpCode = '9999';
         let otpSent = false;
         let otpSentMethod = 'local';
-        
+
         // Fetch SMTP config to see if email sending is enabled
         const [smtpSettings] = await db.query('SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender, smtp_secure, smtp_enabled FROM site_settings WHERE id = 1');
         const smtpConfig = smtpSettings && smtpSettings[0];
-        
+
         if (smtpConfig && smtpConfig.smtp_enabled === 1 && smtpConfig.smtp_host && smtpConfig.smtp_user && smtpConfig.smtp_pass && adminEmail) {
             otpCode = Math.floor(1000 + Math.random() * 9000).toString();
             const emailSubject = 'Job Connect Admin Gateway Verification Code';
@@ -1540,7 +1579,7 @@ app.post('/api/auth/admin-login', async (req, res) => {
                 otpSentMethod = 'email';
             }
         }
-        
+
         if (!otpSent) {
             // Fallback to Twilio or mock OTP
             const otpResult = await generateAndSendOtp(adminMobile, 'Admin Login');
@@ -1548,7 +1587,7 @@ app.post('/api/auth/admin-login', async (req, res) => {
             otpSent = otpResult.sent;
             otpSentMethod = otpResult.sent ? 'twilio' : 'local';
         }
-        
+
         pendingLogins.set(transactionToken, {
             user: rows[0],
             otp: otpCode,
@@ -1564,8 +1603,8 @@ app.post('/api/auth/admin-login', async (req, res) => {
             responseMessage = 'OTP sent to your registered mobile number';
         }
 
-        res.json({ 
-            otp_required: true, 
+        res.json({
+            otp_required: true,
             transaction_token: transactionToken,
             message: responseMessage
         });
@@ -1606,15 +1645,15 @@ app.post('/api/auth/login/verify-otp', async (req, res) => {
             permissions = { super_admin: true };
         }
 
-        res.json({ 
-            user: { 
-                id: user.id, 
-                name: user.name, 
-                email: user.email, 
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
                 role: user.role,
                 company_name: user.company_name,
                 permissions: permissions || {}
-            } 
+            }
         });
     } catch (err) {
         console.error(err);
@@ -1698,7 +1737,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
         let query;
         let params = [];
-        
+
         if (role === 'admin') {
             if (identifier.includes('@')) {
                 query = 'SELECT * FROM users WHERE role = ? AND email = ? AND is_deleted_by_admin = 0';
@@ -1737,7 +1776,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
         const user = rows[0];
         const transactionToken = Math.random().toString(36).substring(2, 15);
-        
+
         let otpCode = '9999';
         let otpSent = false;
         let otpSentMethod = 'local';
@@ -1746,7 +1785,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         if (role === 'admin' && user.email) {
             const [smtpSettings] = await db.query('SELECT smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender, smtp_secure, smtp_enabled FROM site_settings WHERE id = 1');
             const smtpConfig = smtpSettings && smtpSettings[0];
-            
+
             if (smtpConfig && smtpConfig.smtp_enabled === 1 && smtpConfig.smtp_host && smtpConfig.smtp_user && smtpConfig.smtp_pass) {
                 otpCode = Math.floor(1000 + Math.random() * 9000).toString();
                 const emailSubject = 'Job Connect Admin Password Reset Verification Code';
@@ -1847,7 +1886,7 @@ app.put('/api/users/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { name, email, phone, company_name, address, google_map_link, gst_number, dob } = req.body;
-        
+
         // Validation: check for duplicate phone number
         if (phone) {
             const [existingPhone] = await db.query('SELECT id FROM users WHERE phone = ? AND id != ? AND is_deleted_by_admin = 0', [phone, id]);
@@ -1867,7 +1906,7 @@ app.put('/api/users/:id', async (req, res) => {
         const [oldUser] = await db.query('SELECT gst_number, company_name FROM users WHERE id = ?', [id]);
         let resetVerification = false;
         let finalGstNumber = gst_number;
-        
+
         if (oldUser.length > 0) {
             // Check if business name has changed
             if (oldUser[0].company_name !== company_name) {
@@ -1893,12 +1932,12 @@ app.put('/api/users/:id', async (req, res) => {
         queryParams.push(id);
 
         await db.execute(updateQuery, queryParams);
-        
-        res.json({ 
-            success: true, 
-            message: 'Profile updated successfully', 
-            resetVerification, 
-            clearedGst: finalGstNumber === null 
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            resetVerification,
+            clearedGst: finalGstNumber === null
         });
     } catch (err) {
         console.error(err);
@@ -1910,11 +1949,11 @@ app.put('/api/users/:id/verify-gst', async (req, res) => {
     try {
         const { id } = req.params;
         const { gst_number } = req.body;
-        
+
         if (!gst_number) {
             return res.status(400).json({ error: 'GST Number is required' });
         }
-        
+
         function verifyGSTChecksum(gstin) {
             if (gstin.length !== 15) return false;
             const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -1962,10 +2001,10 @@ app.put('/api/users/:id/password', async (req, res) => {
         const { currentPassword, newPassword } = req.body;
 
         const [users] = await db.query('SELECT password FROM users WHERE id = ?', [id]);
-        
+
         if (users.length === 0) return res.status(404).json({ error: 'User not found' });
         if (users[0].password !== currentPassword) return res.status(400).json({ error: 'Incorrect current password' });
-        
+
         await db.execute('UPDATE users SET password = ? WHERE id = ?', [newPassword, id]);
         res.json({ success: true, message: 'Password updated successfully' });
     } catch (err) {
@@ -1980,11 +2019,11 @@ app.post('/api/employers/payment', async (req, res) => {
         const { employer_id } = req.body;
         // Simulate payment success and update status
         await db.execute('UPDATE users SET payment_status = "paid" WHERE id = ? AND role = "employer"', [employer_id]);
-        
+
         const [settings] = await db.query('SELECT currency_code FROM site_settings WHERE id = 1');
         const currencyCode = settings[0]?.currency_code || 'INR';
         const currencySymbol = getCurrencySymbol(currencyCode);
-        
+
         res.json({ success: true, message: `Payment successful, registration fee (${currencySymbol}100) paid.` });
     } catch (err) {
         console.error(err);
@@ -2018,9 +2057,9 @@ app.post('/api/admin/locations', async (req, res) => {
         if (!name || !name.trim()) {
             return res.status(400).json({ error: 'Name is required' });
         }
-        
+
         const parentVal = parent_id ? parseInt(parent_id) : null;
-        
+
         if (name.includes(',')) {
             const subPlaces = name.split(',').map(s => s.trim()).filter(s => s.length > 0);
             let addedCount = 0;
@@ -2085,10 +2124,10 @@ app.post('/api/employers/:id/upload-license-image', uploadLicense.single('licens
     try {
         const { id } = req.params;
         if (!req.file) return res.status(400).json({ error: 'No image file uploaded' });
-        
+
         const imageUrl = `/logos/${req.file.filename}`;
         await db.execute('UPDATE users SET license_image_url = ?, is_verified = 0 WHERE id = ?', [imageUrl, id]);
-        
+
         res.json({ success: true, imageUrl, message: 'License uploaded successfully. Pending admin verification.' });
     } catch (err) {
         console.error(err);
@@ -2257,7 +2296,7 @@ app.get('/api/admin/activity-log', async (req, res) => {
 app.get('/api/csr-partners', async (req, res) => {
     try {
         const showAll = req.query.all === 'true';
-        const query = showAll 
+        const query = showAll
             ? 'SELECT * FROM csr_partners ORDER BY created_at DESC'
             : "SELECT * FROM csr_partners WHERE status = 'active' ORDER BY created_at DESC";
         const [rows] = await db.query(query);
@@ -2341,7 +2380,7 @@ app.get('/api/manifest.json', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT app_name, app_icon_url FROM site_settings WHERE id = 1');
         const settings = rows[0] || { app_name: 'JobConnect', app_icon_url: '/logos/app_icon.png' };
-        
+
         const manifest = {
             "short_name": settings.app_name,
             "name": `${settings.app_name} - Job Portal`,
@@ -2409,17 +2448,20 @@ async function handleSettingsUpdate(req, res) {
             smtp_user = ?, smtp_pass = ?,
             smtp_sender = ?, smtp_secure = ?,
             smtp_enabled = ?,
-            admin_login_secret = ?
+            admin_login_secret = ?,
+            custom_head_code = ?,
+            custom_body_open_code = ?,
+            custom_body_close_code = ?
             WHERE id = 1
         `;
         const params = [
-            s.banner_title || '', 
-            s.banner_subtitle || '', 
-            s.box1_title || '', 
-            s.box1_text || '', 
-            s.box2_title || '', 
-            s.box2_text || '', 
-            s.box3_title || '', 
+            s.banner_title || '',
+            s.banner_subtitle || '',
+            s.box1_title || '',
+            s.box1_text || '',
+            s.box2_title || '',
+            s.box2_text || '',
+            s.box3_title || '',
             s.box3_text || '',
             s.app_name || 'JobConnect',
             s.app_icon_url || '/logos/app_icon.png',
@@ -2449,7 +2491,10 @@ async function handleSettingsUpdate(req, res) {
             s.smtp_sender || '',
             s.smtp_secure !== undefined ? (s.smtp_secure ? 1 : 0) : 0,
             s.smtp_enabled !== undefined ? (s.smtp_enabled ? 1 : 0) : 0,
-            s.admin_login_secret || null
+            s.admin_login_secret || null,
+            s.custom_head_code || null,
+            s.custom_body_open_code || null,
+            s.custom_body_close_code || null
         ];
 
         await db.execute(sql, params);
@@ -2465,7 +2510,7 @@ app.post('/api/branding-config', handleSettingsUpdate);
 app.post('/api/admin/test-smtp', async (req, res) => {
     try {
         const { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_sender, smtp_secure, test_email } = req.body;
-        
+
         if (!smtp_host || !smtp_user || !smtp_pass || !test_email) {
             return res.status(400).json({ error: 'SMTP host, user, password, and test recipient email are required' });
         }
@@ -2525,7 +2570,7 @@ app.get('/api/pages/:slug', async (req, res) => {
         const { slug } = req.params;
         const [rows] = await db.query('SELECT * FROM cms_pages WHERE slug = ? AND is_active = 1', [slug]);
         if (rows.length === 0) return res.status(404).json({ error: 'Page not found' });
-        
+
         const page = rows[0];
         if (page.target_role === 'employer') {
             const role = req.query.role || req.headers['x-user-role'];

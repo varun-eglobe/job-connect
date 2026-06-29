@@ -16,15 +16,21 @@ const StaticPage = () => {
                 const role = localStorage.getItem('role');
                 const res = await axios.get(`/api/pages/${slug}`, { params: { role } });
                 setPage(res.data);
+                if (res.data) {
+                    document.title = `${res.data.title} - Job Connect`;
+                }
                 setErrorStatus(null);
             } catch (err) {
                 console.error("Page fetch failed", err);
                 if (err.response?.status === 403) {
                     setErrorStatus(403);
+                    document.title = 'Access Denied - Job Connect';
                 } else if (err.response?.status === 404) {
                     setErrorStatus(404);
+                    document.title = 'Page Not Found - Job Connect';
                 } else {
                     setErrorStatus(500);
+                    document.title = 'Error - Job Connect';
                 }
             } finally {
                 setLoading(false);

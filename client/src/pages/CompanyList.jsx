@@ -44,6 +44,7 @@ const CompanyList = () => {
   };
 
   useEffect(() => {
+    document.title = 'Verified Employers Directory - Job Connect';
     fetchCompanies();
   }, [searchFilter]);
 
@@ -268,149 +269,68 @@ const CompanyList = () => {
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                    <th className="py-5 px-8">Company Name</th>
-                    <th className="py-5 px-6">Verification</th>
-                    <th className="py-5 px-6">Contact Phone</th>
-                    <th className="py-5 px-6 text-center">Active Openings</th>
-                    <th className="py-5 px-8 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredAndSortedCompanies.map((company) => (
-                    <tr key={company.id} className="hover:bg-slate-50/40 transition-colors group">
-                      {/* Company Name */}
-                      <td className="py-4 px-8">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-500 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-all duration-300 shrink-0">
-                            <Building2 size={18} />
-                          </div>
-                          <Link 
-                            to={`/employers/${company.id}`}
-                            className="font-black text-slate-800 hover:text-blue-600 transition-colors text-base truncate block max-w-[200px]"
-                          >
-                            {company.company_name}
-                          </Link>
-                        </div>
-                      </td>
-
-                      {/* Verification Status */}
-                      <td className="py-4 px-6">
-                        {company.is_gst_verified === 1 || company.is_verified === 1 ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-wider rounded-full border border-green-100">
-                            <CheckCircle2 size={12} className="fill-green-50" />
-                            Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-wider rounded-full border border-slate-100">
-                            <HelpCircle size={12} />
-                            Pending
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Contact Phone */}
-                      <td className="py-4 px-6">
-                        <span className="flex items-center gap-2 text-slate-500 text-sm font-semibold select-all">
-                          <Phone size={14} className="text-slate-300 shrink-0" />
-                          {company.phone || '—'}
-                        </span>
-                      </td>
-
-                      {/* Active Openings Count */}
-                      <td className="py-4 px-6 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-tighter ${
-                          company.job_count > 0 
-                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                            : 'bg-slate-50 text-slate-400 border border-slate-100'
-                        }`}>
-                          <Briefcase size={12} />
-                          {company.job_count} Jobs
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-4 px-8 text-right">
-                        <Link 
-                          to={`/employers/${company.id}`}
-                          className="inline-flex items-center justify-center gap-1 bg-slate-50 text-slate-700 hover:bg-blue-600 hover:text-white px-4 h-9 rounded-xl text-xs font-bold transition-all group-hover:shadow-sm"
-                        >
-                          Profile
-                          <ChevronRight size={14} />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards View (Instead of table to keep responsive) */}
-            <div className="md:hidden divide-y divide-slate-100">
-              {filteredAndSortedCompanies.map((company) => (
-                <div key={company.id} className="p-6 flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-500 shrink-0">
-                        <Building2 size={18} />
-                      </div>
-                      <div className="min-w-0">
-                        <Link 
-                          to={`/employers/${company.id}`}
-                          className="font-black text-slate-800 hover:text-blue-600 transition-colors text-base truncate block"
-                        >
-                          {company.company_name}
-                        </Link>
-                        <span className="text-[10px] text-slate-400 font-semibold select-all block mt-0.5">{company.phone || '—'}</span>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredAndSortedCompanies.map((company) => (
+              <div 
+                key={company.id} 
+                className="group bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  {/* Card Header: Logo & Status badges */}
+                  <div className="flex justify-between items-start gap-4 mb-5">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-sky-50 group-hover:from-blue-600 group-hover:to-indigo-600 border border-blue-100/50 group-hover:border-blue-600 rounded-2xl flex items-center justify-center text-blue-600 group-hover:text-white text-lg font-black transition-all duration-300 shrink-0">
+                      {company.company_name?.[0]?.toUpperCase() || 'E'}
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4 mt-2">
-                    {/* Verification Status */}
                     <div>
                       {company.is_gst_verified === 1 || company.is_verified === 1 ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-green-50 text-green-600 text-[9px] font-black uppercase tracking-wider rounded-full border border-green-100">
-                          <CheckCircle2 size={10} className="fill-green-50" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-wider rounded-full border border-green-100/60 shadow-sm shadow-green-100/10">
+                          <CheckCircle2 size={11} className="fill-green-50" />
                           Verified
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-wider rounded-full border border-slate-100">
-                          <HelpCircle size={10} />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-wider rounded-full border border-slate-100">
+                          <HelpCircle size={11} />
                           Pending
                         </span>
                       )}
                     </div>
+                  </div>
 
-                    {/* Openings count */}
-                    <div>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter ${
-                        company.job_count > 0 
-                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-                          : 'bg-slate-50 text-slate-400 border border-slate-100'
+                  {/* Company Name */}
+                  <Link 
+                    to={`/employers/${company.id}`}
+                    className="font-black text-slate-800 hover:text-blue-600 transition-colors text-lg line-clamp-1 block mb-4"
+                  >
+                    {company.company_name}
+                  </Link>
+
+                  {/* Details Row: Phone and Active Openings */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100/60">
+                    <div className="flex items-center gap-2.5 text-slate-500 text-xs font-semibold select-all">
+                      <Phone size={14} className="text-slate-400 shrink-0" />
+                      <span>{company.phone || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Briefcase size={14} className="text-slate-400 shrink-0" />
+                      <span className={`text-xs font-black uppercase tracking-tighter ${
+                        company.job_count > 0 ? 'text-emerald-600' : 'text-slate-400'
                       }`}>
-                        <Briefcase size={10} />
-                        {company.job_count} Jobs
+                        {company.job_count} Active {company.job_count === 1 ? 'Opening' : 'Openings'}
                       </span>
                     </div>
                   </div>
-
-                  {/* Profile action */}
-                  <Link 
-                    to={`/employers/${company.id}`}
-                    className="w-full bg-slate-50 text-slate-700 hover:bg-blue-600 hover:text-white rounded-xl h-10 flex items-center justify-center font-bold text-sm transition-all border border-slate-100 mt-2"
-                  >
-                    View Employer Profile
-                  </Link>
                 </div>
-              ))}
-            </div>
 
+                {/* Card Action Button */}
+                <Link 
+                  to={`/employers/${company.id}`}
+                  className="w-full mt-6 bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white rounded-xl h-11 flex items-center justify-center font-bold text-xs transition-all border border-slate-100/80 hover:border-blue-600 gap-1"
+                >
+                  <span>View Employer Profile</span>
+                  <ChevronRight size={14} />
+                </Link>
+              </div>
+            ))}
           </div>
         )}
       </div>

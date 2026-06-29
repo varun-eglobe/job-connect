@@ -90,6 +90,10 @@ const JobList = () => {
   const typeDropdownRef = useRef(null);
 
   useEffect(() => {
+    document.title = 'Search Jobs - Job Connect';
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target)) {
         setIsTypeDropdownOpen(false);

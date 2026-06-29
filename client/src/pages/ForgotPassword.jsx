@@ -49,6 +49,7 @@ const ForgotPassword = ({ isAdmin = false }) => {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    document.title = 'Reset Password - Job Connect';
     const fetchSettings = async () => {
       try {
         const res = await axios.get('/api/settings');

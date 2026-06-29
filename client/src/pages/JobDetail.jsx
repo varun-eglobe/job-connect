@@ -152,11 +152,16 @@ const JobDetail = () => {
         const userId = localStorage.getItem('user_id');
         const url = (role === 'candidate' && userId) ? `/api/jobs/${id}?candidate_id=${userId}` : `/api/jobs/${id}`;
         const response = await axios.get(url);
-        setJob(response.data.job);
+        const fetchedJob = response.data.job;
+        setJob(fetchedJob);
+        if (fetchedJob) {
+          document.title = `${fetchedJob.title} at ${fetchedJob.company_name || 'Job Connect'} - Job Connect`;
+        }
         setSimilarJobs(response.data.similarJobs || []);
       } catch (err) {
         console.error("Error fetching job details", err);
         setError("This job listing is no longer active or has been removed by the employer.");
+        document.title = 'Job Not Found - Job Connect';
       } finally {
         setLoading(false);
       }

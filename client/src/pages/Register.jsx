@@ -39,6 +39,7 @@ const Register = () => {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    document.title = 'Create Account - Job Connect';
     const fetchPages = async () => {
       try {
         const res = await axios.get('/api/pages');

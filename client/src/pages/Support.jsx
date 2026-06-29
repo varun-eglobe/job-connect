@@ -10,6 +10,7 @@ const Support = () => {
   const [selectedLocationId, setSelectedLocationId] = useState('');
 
   useEffect(() => {
+    document.title = 'Help & Support Center - Job Connect';
     const fetchData = async () => {
       try {
         const [helpRes, locRes] = await Promise.all([

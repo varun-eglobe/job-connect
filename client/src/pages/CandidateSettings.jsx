@@ -37,6 +37,7 @@ const CandidateSettings = () => {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    document.title = 'Candidate Settings - Job Connect';
     const fetchData = async () => {
       try {
         const [settingsRes, userRes] = await Promise.all([

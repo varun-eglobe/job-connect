@@ -9,6 +9,7 @@ const EmployerDetail = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [settings, setSettings] = useState(null);
   
   const isLoggedIn = !!localStorage.getItem('role');
 
@@ -21,17 +22,32 @@ const EmployerDetail = () => {
         const userId = localStorage.getItem('user_id');
         const url = (role === 'candidate' && userId) ? `/api/employers/${id}?candidate_id=${userId}` : `/api/employers/${id}`;
         const response = await axios.get(url);
-        setEmployer(response.data.employer);
+        const fetchedEmp = response.data.employer;
+        setEmployer(fetchedEmp);
+        if (fetchedEmp) {
+          document.title = `${fetchedEmp.company_name} Profile - Job Connect`;
+        }
         setJobs(response.data.jobs || []);
       } catch (err) {
         console.error("Error fetching employer details", err);
         setError("This organization profile is not available or has been removed.");
+        document.title = 'Employer Not Found - Job Connect';
       } finally {
         setLoading(false);
       }
     };
+
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get('/api/settings');
+        setSettings(response.data);
+      } catch (err) {
+        console.error("Error fetching settings", err);
+      }
+    };
     
     fetchEmployerDetails();
+    fetchSettings();
     window.scrollTo(0, 0);
   }, [id]);
 
@@ -233,9 +249,9 @@ const EmployerDetail = () => {
 
                     <div className="space-y-3">
                       {employer.phone && (
-                        <a href={`tel:${employer.phone}`} className="flex items-center gap-3 p-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold hover:bg-emerald-100 transition-colors border border-emerald-100">
+                        <a href={`tel:${employer.phone.startsWith('+') ? employer.phone : '+' + (settings?.country_phone_code || '91') + employer.phone}`} className="flex items-center gap-3 p-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold hover:bg-emerald-100 transition-colors border border-emerald-100">
                           <Phone size={20} />
-                          {employer.phone}
+                          {employer.phone.startsWith('+') ? employer.phone : `+${settings?.country_phone_code || '91'} ${employer.phone}`}
                         </a>
                       )}
 

@@ -11,6 +11,7 @@ const PaymentSimulation = () => {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    document.title = 'Payment Sandbox Simulation - Job Connect';
     axios.get('/api/settings')
       .then(res => setSettings(res.data))
       .catch(err => console.error(err));

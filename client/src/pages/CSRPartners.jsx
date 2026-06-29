@@ -10,6 +10,7 @@ const CSRPartners = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        document.title = 'CSR Partnerships & Sponsors - Job Connect';
         const fetchData = async () => {
             try {
                 const [partnersRes, settingsRes] = await Promise.all([

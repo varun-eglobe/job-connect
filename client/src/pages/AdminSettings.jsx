@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Settings, MapPin, Plus, X, ArrowLeft, Layout, FileText, Save, Trash2, Edit3, Globe, Lock, ChevronRight, HelpCircle, Users, ShieldCheck, Mail, Key, GripVertical, ChevronDown, MessageSquare, Building2, Eye, EyeOff, Search, Send, Clock, Activity, Check } from 'lucide-react';
+import { Settings, MapPin, Plus, X, ArrowLeft, Layout, FileText, Save, Trash2, Edit3, Globe, Lock, ChevronRight, HelpCircle, Users, ShieldCheck, Mail, Key, GripVertical, ChevronDown, MessageSquare, Building2, Eye, EyeOff, Search, Send, Clock, Activity, Check, Code } from 'lucide-react';
 
 // Custom Wrapper for Quill to handle React 19 stability via CDN
 const WYSIWYG = ({ value, onChange, placeholder }) => {
@@ -114,7 +114,10 @@ const AdminSettings = () => {
         smtp_sender: '',
         smtp_secure: 0,
         smtp_enabled: 0,
-        admin_login_secret: ''
+        admin_login_secret: '',
+        custom_head_code: '',
+        custom_body_open_code: '',
+        custom_body_close_code: ''
     });
     const [pages, setPages] = useState([]);
     const [editingPage, setEditingPage] = useState(null);
@@ -188,6 +191,7 @@ const AdminSettings = () => {
     const API_BASE = '/api';
 
     useEffect(() => {
+        document.title = 'Admin Settings - Job Connect';
         const role = localStorage.getItem('role');
         if (role !== 'admin') navigate('/login');
         fetchAllData();
@@ -586,6 +590,7 @@ const AdminSettings = () => {
                 title: 'System Configuration',
                 items: [
                     { id: 'branding', label: 'App Branding', icon: Layout, permission: 'manage_branding' },
+                    { id: 'custom_codes', label: 'Header & Footer Codes', icon: Code, permission: 'manage_branding' },
                     { id: 'sms', label: 'SMS Configuration', icon: Mail, permission: 'manage_sms' },
                     { id: 'smtp', label: 'SMTP Configuration', icon: Send, permission: 'manage_smtp' },
                     { id: 'domains', label: 'Domain Rules', icon: ShieldCheck, permission: 'manage_domains' },
@@ -2274,7 +2279,71 @@ const AdminSettings = () => {
                             </div>
                         )}
 
+                        {activeTab === 'custom_codes' && can('manage_branding') && (
+                            <div className="animate-in fade-in duration-500 font-sans">
+                                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-xl font-black text-slate-800">Custom Header & Footer Codes</h2>
+                                        <p className="text-sm text-slate-500">Inject custom HTML, script tags, stylesheets, and tracking pixels dynamically.</p>
+                                    </div>
+                                    <button onClick={handleSaveSettings} className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all">
+                                        <Save size={18} /> Save Codes
+                                    </button>
+                                </div>
+                                <div className="p-8 space-y-8">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center px-1">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                                                Before &lt;/head&gt; (Closing Head Tag)
+                                            </label>
+                                            <span className="text-[10px] text-blue-500 font-bold bg-blue-50 px-2.5 py-0.5 rounded-full font-sans">
+                                                CSS, Verification tags, Meta & Analytics
+                                            </span>
+                                        </div>
+                                        <textarea 
+                                            rows={6}
+                                            className="w-full p-5 bg-slate-50 border border-slate-200 rounded-3xl font-mono text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all resize-y" 
+                                            value={settings.custom_head_code || ''} 
+                                            onChange={(e) => setSettings({...settings, custom_head_code: e.target.value})} 
+                                        />
+                                    </div>
 
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center px-1">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                                                After &lt;body&gt; (Opening Body Tag)
+                                            </label>
+                                            <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full font-sans">
+                                                Fallback pixels & noscript tags
+                                            </span>
+                                        </div>
+                                        <textarea 
+                                            rows={6}
+                                            className="w-full p-5 bg-slate-50 border border-slate-200 rounded-3xl font-mono text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all resize-y" 
+                                            value={settings.custom_body_open_code || ''} 
+                                            onChange={(e) => setSettings({...settings, custom_body_open_code: e.target.value})} 
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center px-1">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                                                Before &lt;/body&gt; (Closing Body Tag)
+                                            </label>
+                                            <span className="text-[10px] text-purple-600 font-bold bg-purple-50 px-2.5 py-0.5 rounded-full font-sans">
+                                                Heavy Javascript files & widgets
+                                            </span>
+                                        </div>
+                                        <textarea 
+                                            rows={6}
+                                            className="w-full p-5 bg-slate-50 border border-slate-200 rounded-3xl font-mono text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all resize-y" 
+                                            value={settings.custom_body_close_code || ''} 
+                                            onChange={(e) => setSettings({...settings, custom_body_close_code: e.target.value})} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {activeTab === 'security' && (
                             <div className="animate-in fade-in duration-500">

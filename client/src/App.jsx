@@ -418,6 +418,53 @@ const SplashScreen = ({ isFading, progress }) => (
   </div>
 );
 
+const injectCustomScripts = (settings) => {
+  const containers = [
+    { code: settings.custom_head_code, id: 'custom-head-container', parent: document.head, insertBefore: null },
+    { code: settings.custom_body_open_code, id: 'custom-body-open-container', parent: document.body, insertBefore: document.body.firstChild },
+    { code: settings.custom_body_close_code, id: 'custom-body-close-container', parent: document.body, insertBefore: null }
+  ];
+
+  containers.forEach(({ code, id, parent, insertBefore }) => {
+    const existing = document.getElementById(id);
+    if (existing) existing.remove();
+
+    if (code && code.trim() !== '') {
+      const container = document.createElement('div');
+      container.id = id;
+      container.style.display = 'none';
+      container.innerHTML = code;
+
+      const fragment = document.createDocumentFragment();
+      while (container.firstChild) {
+        const child = container.firstChild;
+        if (child.tagName === 'SCRIPT') {
+          const script = document.createElement('script');
+          for (let i = 0; i < child.attributes.length; i++) {
+            script.setAttribute(child.attributes[i].name, child.attributes[i].value);
+          }
+          script.text = child.text;
+          fragment.appendChild(script);
+          container.removeChild(child);
+        } else {
+          fragment.appendChild(child);
+        }
+      }
+
+      const wrap = document.createElement('div');
+      wrap.id = id;
+      wrap.style.display = 'none';
+      wrap.appendChild(fragment);
+
+      if (insertBefore) {
+        parent.insertBefore(wrap, insertBefore);
+      } else {
+        parent.appendChild(wrap);
+      }
+    }
+  });
+};
+
 function App() {
   const [appName, setAppName] = useState(() => localStorage.getItem('app_name') || 'JobConnect');
   const [logoUrl, setLogoUrl] = useState(() => localStorage.getItem('logo_url') || '');
@@ -479,6 +526,7 @@ function App() {
           setCustomFooter(res.data.pdf_footer_text || '');
           setInitiativeLogo(res.data.initiative_logo_url || '');
           setPoweredLogo(res.data.powered_logo_url || '');
+          injectCustomScripts(res.data);
 
           localStorage.setItem('app_name', newName);
           localStorage.setItem('logo_url', newLogo);
@@ -563,50 +611,55 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
-      {dbErrorDetails && <DbErrorOverlay details={dbErrorDetails} onRetry={handleDbRetry} />}
-      {showSplash && <SplashScreen isFading={fadeSplash} progress={progress} />}
-      <div className="min-h-screen bg-slate-50 flex flex-col pb-20 xl:pb-0">
-        <Navigation appName={appName} logoUrl={logoUrl} />
-        <InstallPrompt />
-        <NetworkStatus forceShow={serverError} />
+      {dbErrorDetails ? (
+        <DbErrorOverlay details={dbErrorDetails} onRetry={handleDbRetry} />
+      ) : (
+        <>
+          {showSplash && <SplashScreen isFading={fadeSplash} progress={progress} />}
+          <div className="min-h-screen bg-slate-50 flex flex-col pb-20 xl:pb-0">
+            <Navigation appName={appName} logoUrl={logoUrl} />
+            <InstallPrompt />
+            <NetworkStatus forceShow={serverError} />
 
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/jobs" element={<JobList />} />
-            <Route path="/jobs/:id" element={<JobDetail />} />
-            <Route path="/employers" element={<CompanyList />} />
-            <Route path="/employers/:id" element={<EmployerDetail />} />
-            <Route path="/companies" element={<Navigate to="/employers" replace />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/employer/dashboard" element={<EmployerDashboard />} />
-            <Route path="/employer/settings" element={<EmployerSettings />} />
-            <Route path="/candidate/settings" element={<CandidateSettings />} />
-            <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/jobs" element={<JobList />} />
+                <Route path="/jobs/:id" element={<JobDetail />} />
+                <Route path="/employers" element={<CompanyList />} />
+                <Route path="/employers/:id" element={<EmployerDetail />} />
+                <Route path="/companies" element={<Navigate to="/employers" replace />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+                <Route path="/employer/settings" element={<EmployerSettings />} />
+                <Route path="/candidate/settings" element={<CandidateSettings />} />
+                <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
 
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-            <Route path="/admin/settings/:tabId" element={<AdminSettings />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/admin-forgot-password" element={<ForgotPassword isAdmin={true} />} />
-            <Route path="/csr-partners" element={<CSRPartners />} />
-            <Route path="/page/:slug" element={<StaticPage />} />
-          </Routes>
-        </main>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/settings/:tabId" element={<AdminSettings />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/admin-forgot-password" element={<ForgotPassword isAdmin={true} />} />
+                <Route path="/csr-partners" element={<CSRPartners />} />
+                <Route path="/page/:slug" element={<StaticPage />} />
+              </Routes>
+            </main>
 
-        <Footer 
-          appName={appName} 
-          customFooter={customFooter} 
-          initiativeLogo={initiativeLogo}
-          poweredLogo={poweredLogo}
-        />
+            <Footer 
+              appName={appName} 
+              customFooter={customFooter} 
+              initiativeLogo={initiativeLogo}
+              poweredLogo={poweredLogo}
+            />
 
-        {/* Mobile Bottom Tab Bar */}
-        <MobileTabBar />
-      </div>
+            {/* Mobile Bottom Tab Bar */}
+            <MobileTabBar />
+          </div>
+        </>
+      )}
     </Router>
   );
 }

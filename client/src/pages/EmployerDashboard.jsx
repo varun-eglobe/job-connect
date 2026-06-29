@@ -99,6 +99,7 @@ const EmployerDashboard = () => {
   const [editingJobId, setEditingJobId] = useState(null);
   const [settings, setSettings] = useState(null);
   const [docPages, setDocPages] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
 
   const formatSalary = (range) => {
     if (!range) return 'Not set';
@@ -153,6 +154,7 @@ const EmployerDashboard = () => {
   const [loadingApplicants, setLoadingApplicants] = useState(false);
 
   useEffect(() => {
+    document.title = 'Employer Dashboard - Job Connect';
     const fetchStatus = async () => {
       try {
         const response = await axios.get(`/api/users/${employerId}`);
@@ -227,41 +229,41 @@ const EmployerDashboard = () => {
 
   const handlePostJob = async (e) => {
     e.preventDefault();
-    
-    if (!formData.age_range || !formData.age_range.trim()) {
-      setMessage({ type: 'error', text: 'Age Range is required.' });
-      return;
+    setFormErrors({});
+    const newErrors = {};
+
+    if (!formData.title || !formData.title.trim()) {
+      newErrors.title = 'Job Title is required.';
     }
-    
+    if (!formData.description || !formData.description.trim()) {
+      newErrors.description = 'Description is required.';
+    }
+    if (!formData.vacancies_count || formData.vacancies_count < 1) {
+      newErrors.vacancies_count = 'Vacancies must be at least 1.';
+    }
+
     const parentLocObj = locations.find(l => l.name === parentName && !l.parent_id);
     const subPlacesForParent = parentLocObj ? locations.filter(l => l.parent_id === parentLocObj.id) : [];
     const hasSubplaces = subPlacesForParent.length > 0;
     
-    if (!formData.location || formData.location === parentName) {
-      if (hasSubplaces) {
-        setMessage({ type: 'error', text: 'Please select a specific Area / Sub-place.' });
-        return;
-      } else if (!formData.location) {
-        setMessage({ type: 'error', text: 'Please select a Region / District.' });
-        return;
-      }
+    if (!formData.location) {
+      newErrors.location = 'Please select a Region / District.';
+    } else if (formData.location === parentName && hasSubplaces) {
+      newErrors.location = 'Please select a specific Area / Sub-place.';
     }
 
     if (formData.is_token_based) {
       if (!formData.token_slots || formData.token_slots.length === 0) {
-        setMessage({ type: 'error', text: 'Please generate and configure token slot times.' });
-        return;
-      }
-      // Check if all generated slots have a date set
-      const incomplete = formData.token_slots.some(s => !s.date);
-      if (incomplete) {
-        setMessage({ type: 'error', text: 'Please fill in the interview dates for all token ranges.' });
-        return;
-      }
-      const invalidTime = formData.token_slots.some(s => s.startTime && s.endTime && s.endTime <= s.startTime);
-      if (invalidTime) {
-        setMessage({ type: 'error', text: 'End time must be greater than start time for all slots.' });
-        return;
+        newErrors.token_slots = 'Please generate and configure token slot times.';
+      } else {
+        const incomplete = formData.token_slots.some(s => !s.date);
+        if (incomplete) {
+          newErrors.token_slots = 'Please fill in the interview dates for all token ranges.';
+        }
+        const invalidTime = formData.token_slots.some(s => s.startTime && s.endTime && s.endTime <= s.startTime);
+        if (invalidTime) {
+          newErrors.token_slots = 'End time must be greater than start time for all slots.';
+        }
       }
     }
 
@@ -273,8 +275,29 @@ const EmployerDashboard = () => {
       }
     }
 
-    if (!formData.is_token_based && finalExpiryDate && finalExpiryDate < getTodayString()) {
-      setMessage({ type: 'error', text: 'Expiry date cannot be in the past.' });
+    if (!formData.is_token_based) {
+      if (!finalExpiryDate) {
+        newErrors.expiry_date = 'Expiry Date is required.';
+      } else if (finalExpiryDate < getTodayString()) {
+        newErrors.expiry_date = 'Expiry date cannot be in the past.';
+      }
+    }
+
+    if (!formData.age_range || !formData.age_range.trim()) {
+      newErrors.age_range = 'Age Range is required.';
+    }
+
+    if (!formData.contact_person || !formData.contact_person.trim()) {
+      newErrors.contact_person = 'Contact Person is required.';
+    }
+
+    if (!formData.salary_range || !formData.salary_range.trim()) {
+      newErrors.salary_range = 'Salary Range is required.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      setMessage({ type: 'error', text: 'Please correct the errors in the form.' });
       return;
     }
 
@@ -358,6 +381,7 @@ const EmployerDashboard = () => {
 
   const handleEditClick = (job) => {
     setMessage('');
+    setFormErrors({});
     const formattedDate = getLocalDateString(job.expiry_date);
     let parsedSlots = [];
     if (job.token_slots) {
@@ -398,6 +422,7 @@ const EmployerDashboard = () => {
   const handleNewJobClick = () => {
     setEditingJobId(null);
     setMessage('');
+    setFormErrors({});
     setFormData({
       title: '',
       description: '',
@@ -456,6 +481,23 @@ const EmployerDashboard = () => {
     }
     return locationName;
   };
+  const todayStr = getTodayString();
+  const expiredJobsCount = jobs.filter(j => {
+    return j.expiry_date && (
+      j.is_token_based 
+        ? getLocalDateString(j.expiry_date) <= todayStr
+        : getLocalDateString(j.expiry_date) < todayStr
+    );
+  }).length;
+  const activeJobsCount = jobs.filter(j => {
+    const isExpired = j.expiry_date && (
+      j.is_token_based 
+        ? getLocalDateString(j.expiry_date) <= todayStr
+        : getLocalDateString(j.expiry_date) < todayStr
+    );
+    return j.status === 'active' && !isExpired;
+  }).length;
+  const inactiveJobsCount = jobs.filter(j => j.status === 'inactive').length;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -494,7 +536,13 @@ const EmployerDashboard = () => {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Contact Phone</p>
-              <p className="text-sm font-semibold text-slate-700">{profile?.phone || '---'}</p>
+              <p className="text-sm font-semibold text-slate-700">
+                {profile?.phone 
+                  ? (profile.phone.startsWith('+') 
+                      ? profile.phone 
+                      : `+${settings?.country_phone_code || '91'} ${profile.phone}`) 
+                  : '---'}
+              </p>
             </div>
           </div>
           
@@ -558,18 +606,23 @@ const EmployerDashboard = () => {
           <Briefcase className="absolute -right-8 -bottom-8 text-blue-200/20 w-48 h-48 rotate-12" />
           
           <div className="relative flex-1">
-            <h3 className="font-bold text-blue-600 uppercase tracking-[0.2em] text-[10px] mb-6">Active Vacancies</h3>
-            <div className="flex items-baseline gap-4">
-              <div className="text-7xl font-black tracking-tighter text-blue-600">{jobs.length}</div>
+            <h3 className="font-bold text-blue-600 uppercase tracking-[0.2em] text-[10px] mb-4">Active Vacancies</h3>
+            <div className="flex items-center gap-6">
+              <div className="flex items-baseline gap-1 text-blue-600 shrink-0">
+                <span className="text-7xl font-black tracking-tighter leading-none">{activeJobsCount}</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 leading-none">Active</span>
+              </div>
               <div className="space-y-1">
-                <p className="text-slate-600 text-sm font-medium">
-                  {jobs.filter(j => j.status === 'active').length} currently live jobs
-                </p>
-                <div className="h-1.5 w-32 bg-blue-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-1000" 
-                    style={{ width: `${jobs.length > 0 ? (jobs.filter(j => j.status === 'active').length / jobs.length) * 100 : 0}%` }}
-                  />
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+                  <span className="text-xs font-bold text-slate-700">{expiredJobsCount} Expired</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0" />
+                  <span className="text-xs font-bold text-slate-700">{inactiveJobsCount} Inactive</span>
+                </div>
+                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.05em] pt-0.5 leading-none">
+                  {jobs.length} Total Listings
                 </div>
               </div>
             </div>
@@ -594,42 +647,25 @@ const EmployerDashboard = () => {
 
       {/* Employer Help & Documentation Section */}
       {docPages.length > 0 && (
-        <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/40 blur-[100px] -mr-32 -mt-32" />
-          
-          <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Employer Help & Documentation</h3>
-              <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Guides, compliance tutorials, and official platform user manuals.</p>
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 text-lg shrink-0">
+              📚
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest">
-              <Clock size={12} />
-              Official Resources
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">Employer Help & Documentation</h3>
+              <p className="text-slate-500 text-xs mt-0.5">Learn about compliance, verification guidelines, or platform rules.</p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+          <div className="flex flex-wrap gap-2 sm:self-center">
             {docPages.map(page => (
               <Link 
                 key={page.id}
                 to={`/page/${page.slug}`}
-                className="group p-6 bg-slate-50 hover:bg-indigo-50/50 border border-slate-100 hover:border-indigo-100 rounded-3xl transition-all duration-300 flex flex-col justify-between hover:shadow-lg hover:shadow-indigo-500/5 cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200/60 hover:border-indigo-100 rounded-lg text-xs font-semibold text-slate-700 hover:text-indigo-700 transition-all cursor-pointer"
               >
-                <div className="space-y-3">
-                  <div className="w-12 h-12 bg-white group-hover:bg-indigo-600 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm border border-slate-100 group-hover:border-indigo-600 text-xl font-black">
-                    📄
-                  </div>
-                  <h4 className="font-extrabold text-slate-800 group-hover:text-indigo-900 transition-colors text-base line-clamp-1 leading-tight">
-                    {page.title}
-                  </h4>
-                  <p className="text-slate-400 text-xs leading-relaxed group-hover:text-indigo-700/70 transition-colors font-medium">
-                    Learn about compliance, verification guidelines, or platform rules in this comprehensive manual.
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 group-hover:text-indigo-700 mt-6 pt-4 border-t border-slate-200/50 group-hover:border-indigo-100 transition-colors">
-                  <span>Read Guide</span>
-                  <ChevronRight size={14} className="transform group-hover:translate-x-1 transition-transform" />
-                </div>
+                <span>{page.title}</span>
+                <ChevronRight size={12} />
               </Link>
             ))}
           </div>
@@ -739,7 +775,7 @@ const EmployerDashboard = () => {
                                   setLoadingApplicants(false);
                                 }
                               }}
-                              className="px-3 h-8 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+                              className="px-3.5 h-8 bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-sm shadow-emerald-600/10 cursor-pointer"
                               title={`View Applicants (Total Slots: ${job.token_count || 0})`}
                             >
                               <Users size={12} />
@@ -844,7 +880,7 @@ const EmployerDashboard = () => {
               </h2>
             </div>
 
-            <form onSubmit={handlePostJob} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <form onSubmit={handlePostJob} noValidate className="flex flex-col flex-1 overflow-hidden min-h-0">
               {/* Modal Body (Scrollable) */}
               <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
                 <div>
@@ -879,24 +915,28 @@ const EmployerDashboard = () => {
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Job Title <span className="text-red-500">*</span></label>
                   <input
                     type="text"
-                    required
                     placeholder="e.g. Delivery Executive"
-                    className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                    className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.title ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                     value={formData.title}
                     onChange={(e) => setFormData({...formData, title: e.target.value})}
                   />
+                  {formErrors.title && (
+                    <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.title}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Description <span className="text-red-500">*</span></label>
                   <textarea
-                    required
                     rows="3"
                     placeholder="Job requirements, timings, etc..."
-                    className="w-full p-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                    className={`w-full p-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.description ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                   />
+                  {formErrors.description && (
+                    <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.description}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -905,11 +945,13 @@ const EmployerDashboard = () => {
                     <input
                       type="number"
                       min="1"
-                      required
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                      className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.vacancies_count ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                       value={formData.vacancies_count}
-                      onChange={(e) => setFormData({...formData, vacancies_count: parseInt(e.target.value)})}
+                      onChange={(e) => setFormData({...formData, vacancies_count: parseInt(e.target.value) || 0})}
                     />
+                    {formErrors.vacancies_count && (
+                      <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.vacancies_count}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">
@@ -917,10 +959,9 @@ const EmployerDashboard = () => {
                     </label>
                     <input
                       type="date"
-                      required={!formData.is_token_based}
                       disabled={formData.is_token_based}
                       min={getTodayString()}
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                      className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed ${formErrors.expiry_date ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                       value={formData.is_token_based 
                         ? (formData.token_slots && formData.token_slots.length > 0 ? formData.token_slots[formData.token_slots.length - 1].date : '') 
                         : formData.expiry_date
@@ -936,6 +977,9 @@ const EmployerDashboard = () => {
                         }
                       }}
                     />
+                    {formErrors.expiry_date && (
+                      <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.expiry_date}</p>
+                    )}
                     {formData.is_token_based && (
                       <span className="block text-[10px] text-blue-600 font-medium mt-1">
                         Automatically set to the last interview date (Token Slot range).
@@ -950,11 +994,13 @@ const EmployerDashboard = () => {
                     <input
                       type="text"
                       placeholder="e.g. 18 - 35"
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                      className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.age_range ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                       value={formData.age_range || ''}
                       onChange={(e) => setFormData({...formData, age_range: e.target.value})}
-                      required
                     />
+                    {formErrors.age_range && (
+                      <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.age_range}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Minimum Qualification</label>
@@ -973,12 +1019,14 @@ const EmployerDashboard = () => {
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Person <span className="text-red-500">*</span></label>
                     <input
                       type="text"
-                      required
                       placeholder="Name"
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                      className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.contact_person ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                       value={formData.contact_person}
                       onChange={(e) => setFormData({...formData, contact_person: e.target.value})}
                     />
+                    {formErrors.contact_person && (
+                      <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.contact_person}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Contact Phone</label>
@@ -996,7 +1044,7 @@ const EmployerDashboard = () => {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Region / District <span className="text-red-500">*</span></label>
                     <select
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                      className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.location ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                       value={parentName}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -1012,7 +1060,7 @@ const EmployerDashboard = () => {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Area / Sub-place {parentName && subPlaces.length > 0 && <span className="text-red-500">*</span>}</label>
                     <select
-                      className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60 disabled:bg-slate-50/50 disabled:cursor-not-allowed"
+                      className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 disabled:opacity-60 disabled:bg-slate-50/50 disabled:cursor-not-allowed ${formErrors.location && formErrors.location.includes('Area') ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                       value={areaName}
                       disabled={!parentName}
                       onChange={(e) => {
@@ -1028,15 +1076,24 @@ const EmployerDashboard = () => {
                   </div>
                 </div>
 
+                {formErrors.location && (
+                  <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.location}</p>
+                )}
+
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Salary Range ({settings?.currency_code || 'INR'})</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">
+                    Salary Range ({settings?.currency_code || 'INR'}) <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     placeholder={`e.g. ${settings?.currency_code || 'INR'} 15,000 - ${settings?.currency_code || 'INR'} 20,000`}
-                    className="w-full h-12 px-4 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-100"
+                    className={`w-full h-12 px-4 rounded-xl border outline-none focus:ring-2 focus:ring-blue-100 ${formErrors.salary_range ? 'border-red-400 bg-red-50/10' : 'border-slate-200'}`}
                     value={formData.salary_range}
                     onChange={(e) => setFormData({...formData, salary_range: e.target.value})}
                   />
+                  {formErrors.salary_range && (
+                    <p className="validation-error-text mt-1.5 animate-in fade-in">{formErrors.salary_range}</p>
+                  )}
                 </div>
 
                 <div>
@@ -1243,6 +1300,12 @@ const EmployerDashboard = () => {
                         </table>
                       </div>
                     )}
+                    {formErrors.token_slots && (
+                      <div className="p-3 rounded-xl text-xs bg-red-50 validation-error-box border border-red-100 font-normal flex items-center gap-2 mt-3 animate-in fade-in duration-200">
+                        <AlertCircle size={14} className="shrink-0" />
+                        <span>{formErrors.token_slots}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1250,7 +1313,7 @@ const EmployerDashboard = () => {
 
               {/* Modal Footer */}
               <div className="px-6 py-4 sm:px-8 sm:py-6 border-t border-slate-100 bg-slate-50/50 flex-shrink-0 space-y-4">
-                {message && (
+                {message && Object.keys(formErrors).length === 0 && (
                   <div className={`p-4 rounded-xl text-sm ${message.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
                     {message.text}
                   </div>
@@ -1345,43 +1408,96 @@ const EmployerDashboard = () => {
                 <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                   <p className="text-sm font-semibold text-slate-500">No candidates have applied/booked interview slots yet.</p>
                 </div>
-              ) : (
-                <div className="overflow-x-auto border border-slate-100 rounded-2xl">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100">
-                        <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Token</th>
-                        <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Candidate Name</th>
-                        <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Phone</th>
-                        <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Interview Date</th>
-                        <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Time</th>
-                        <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Registered As</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-xs font-semibold">
-                      {applicantsList.map((app) => (
-                        <tr key={app.application_id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-5 py-3.5">
-                            <span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg font-black text-sm">
-                              #{app.token_number}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3.5 text-slate-800 font-bold">{app.candidate_name}</td>
-                          <td className="px-5 py-3.5 text-slate-600">{app.candidate_phone}</td>
-                          <td className="px-5 py-3.5 text-slate-700">
-                            {app.token_slot_date ? new Date(app.token_slot_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
-                          </td>
-                          <td className="px-5 py-3.5 text-slate-700 font-bold">{app.token_slot_time || 'N/A'}</td>
-                          <td className="px-5 py-3.5 text-[10px] text-slate-400">
-                            <div className="font-semibold text-slate-600">{app.registered_name}</div>
-                            <div>{app.registered_phone}</div>
-                          </td>
+              ) : (() => {
+                const sortedApps = [...applicantsList].sort((a, b) => a.token_number - b.token_number);
+                const displayRows = [];
+                if (sortedApps.length > 0 && sortedApps[0].token_number > 1) {
+                  displayRows.push({
+                    type: 'gap',
+                    start: 1,
+                    end: sortedApps[0].token_number - 1,
+                    key: 'gap-start'
+                  });
+                }
+                for (let i = 0; i < sortedApps.length; i++) {
+                  const currentApp = sortedApps[i];
+                  if (i > 0) {
+                    const prevApp = sortedApps[i - 1];
+                    const gap = currentApp.token_number - prevApp.token_number;
+                    if (gap > 1) {
+                      displayRows.push({
+                        type: 'gap',
+                        start: prevApp.token_number + 1,
+                        end: currentApp.token_number - 1,
+                        key: `gap-${prevApp.application_id}-${currentApp.application_id}`
+                      });
+                    }
+                  }
+                  displayRows.push({
+                    type: 'applicant',
+                    data: currentApp,
+                    key: `app-${currentApp.application_id}`
+                  });
+                }
+                if (sortedApps.length > 0 && selectedJobForApplicants && sortedApps[sortedApps.length - 1].token_number < selectedJobForApplicants.token_count) {
+                  displayRows.push({
+                    type: 'gap',
+                    start: sortedApps[sortedApps.length - 1].token_number + 1,
+                    end: selectedJobForApplicants.token_count,
+                    key: 'gap-end'
+                  });
+                }
+
+                return (
+                  <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-100">
+                          <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Token</th>
+                          <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Candidate Name</th>
+                          <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Phone</th>
+                          <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Interview Date</th>
+                          <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Time</th>
+                          <th className="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider">Registered As</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-xs font-semibold">
+                        {displayRows.map((row) => {
+                          if (row.type === 'gap') {
+                            return (
+                              <tr key={row.key} className="bg-slate-50/30">
+                                <td colSpan={6} className="px-5 py-2.5 text-center text-slate-400 font-medium italic border-y border-slate-100/50">
+                                  <span>Tokens #{row.start} to #{row.end} were not booked (Interview slot empty)</span>
+                                </td>
+                              </tr>
+                            );
+                          }
+                          const app = row.data;
+                          return (
+                            <tr key={app.application_id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-5 py-3.5">
+                                <span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg font-black text-sm">
+                                  #{app.token_number}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3.5 text-slate-800 font-bold">{app.candidate_name}</td>
+                              <td className="px-5 py-3.5 text-slate-600">{app.candidate_phone}</td>
+                              <td className="px-5 py-3.5 text-slate-700">
+                                {app.token_slot_date ? new Date(app.token_slot_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                              </td>
+                              <td className="px-5 py-3.5 text-slate-700 font-bold">{app.token_slot_time || 'N/A'}</td>
+                              <td className="px-5 py-3.5 text-[10px] text-slate-400">
+                                <div className="font-semibold text-slate-600">{app.registered_name}</div>
+                                <div>{app.registered_phone}</div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Modal Footer */}
@@ -1391,6 +1507,66 @@ const EmployerDashboard = () => {
                   const content = document.getElementById('print-schedule-area');
                   if (!content) return;
                   const resolvedLoc = resolveLocation(selectedJobForApplicants?.location);
+                  
+                  // Preprocess gaps for printing
+                  const sortedApps = [...applicantsList].sort((a, b) => a.token_number - b.token_number);
+                  const printRows = [];
+                  if (sortedApps.length > 0 && sortedApps[0].token_number > 1) {
+                    printRows.push({
+                      type: 'gap',
+                      start: 1,
+                      end: sortedApps[0].token_number - 1
+                    });
+                  }
+                  for (let i = 0; i < sortedApps.length; i++) {
+                    const currentApp = sortedApps[i];
+                    if (i > 0) {
+                      const prevApp = sortedApps[i - 1];
+                      const gap = currentApp.token_number - prevApp.token_number;
+                      if (gap > 1) {
+                        printRows.push({
+                          type: 'gap',
+                          start: prevApp.token_number + 1,
+                          end: currentApp.token_number - 1
+                        });
+                      }
+                    }
+                    printRows.push({
+                      type: 'applicant',
+                      data: currentApp
+                    });
+                  }
+                  if (sortedApps.length > 0 && selectedJobForApplicants && sortedApps[sortedApps.length - 1].token_number < selectedJobForApplicants.token_count) {
+                    printRows.push({
+                      type: 'gap',
+                      start: sortedApps[sortedApps.length - 1].token_number + 1,
+                      end: selectedJobForApplicants.token_count
+                    });
+                  }
+
+                  const tableRowsHtml = printRows.map(row => {
+                    if (row.type === 'gap') {
+                      return `
+                        <tr style="background: #f8fafc;">
+                          <td colspan="6" style="padding: 8px 14px; text-align: center; color: #94a3b8; font-style: italic; font-size: 11px; border-bottom: 1px solid #e2e8f0;">
+                            Tokens #${row.start} to #${row.end} were not booked (Interview slot empty)
+                          </td>
+                        </tr>
+                      `;
+                    }
+                    const app = row.data;
+                    return `
+                      <tr>
+                        <td><span class="token">#${app.token_number}</span></td>
+                        <td>${app.candidate_name || ''}</td>
+                        <td>${app.candidate_phone || ''}</td>
+                        <td>${app.token_slot_date ? new Date(app.token_slot_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</td>
+                        <td>${app.token_slot_time || 'N/A'}</td>
+                        <td><span class="reg-name">${app.registered_name || ''}</span><br/><span class="reg-phone">${app.registered_phone || ''}</span></td>
+                      </tr>
+                    `;
+                  }).join('');
+
                   const win = window.open('', '_blank', 'width=900,height=700');
                   win.document.write(`
                     <html>
@@ -1438,16 +1614,7 @@ const EmployerDashboard = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            ${applicantsList.map(app => `
-                              <tr>
-                                <td><span class="token">#${app.token_number}</span></td>
-                                <td>${app.candidate_name || ''}</td>
-                                <td>${app.candidate_phone || ''}</td>
-                                <td>${app.token_slot_date ? new Date(app.token_slot_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</td>
-                                <td>${app.token_slot_time || 'N/A'}</td>
-                                <td><span class="reg-name">${app.registered_name || ''}</span><br/><span class="reg-phone">${app.registered_phone || ''}</span></td>
-                              </tr>
-                            `).join('')}
+                            ${tableRowsHtml}
                           </tbody>
                         </table>
                       </body>

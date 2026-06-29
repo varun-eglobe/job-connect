@@ -33,6 +33,7 @@ const Login = () => {
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
+    document.title = 'Sign In - Job Connect';
     const fetchSettings = async () => {
       try {
         const res = await axios.get('/api/settings');
@@ -44,12 +45,10 @@ const Login = () => {
     fetchSettings();
   }, []);
 
-  const isLocalhost = window.location.hostname === 'localhost' || 
-                      window.location.hostname === '127.0.0.1' || 
-                      window.location.hostname === '192.168.1.32';
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
-    if (isLocalhost) {
+    if (isDev) {
       const fetchDebugAccounts = async () => {
         setDebugLoading(true);
         try {
@@ -63,7 +62,7 @@ const Login = () => {
       };
       fetchDebugAccounts();
     }
-  }, [isLocalhost]);
+  }, [isDev]);
 
   const handlePrefill = (account) => {
     if (account.role === 'admin') {
@@ -271,7 +270,7 @@ const Login = () => {
       </div>
 
       {/* Dev Mode Accounts Helper Button */}
-      {isLocalhost && (
+      {isDev && (
         <div className="mt-6 text-center">
           <button 
             onClick={() => setShowDebugModal(true)}
@@ -284,7 +283,7 @@ const Login = () => {
       )}
 
       {/* Dev Mode Accounts Modal */}
-      {showDebugModal && isLocalhost && (
+      {showDebugModal && isDev && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="fixed inset-0" onClick={() => setShowDebugModal(false)} />
           <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-10 animate-in slide-in-from-bottom duration-300 flex flex-col max-h-[85vh]">

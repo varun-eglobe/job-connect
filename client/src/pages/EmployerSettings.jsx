@@ -34,6 +34,7 @@ const EmployerSettings = () => {
   const userId = localStorage.getItem('user_id');
 
   useEffect(() => {
+    document.title = 'Employer Settings - Job Connect';
     const fetchSiteSettings = async () => {
       try {
         const response = await axios.get('/api/settings');
